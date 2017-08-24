@@ -1,0 +1,27 @@
+{
+  "name": "qs-server",
+  "version": "1.0.0",
+  "description": "Queue Management System powered by NodeJS",
+  "main": "dist/server/server.js",
+  "scripts": {
+    "build": "babel src -d dist",
+    "start-dev": "node dist/server/server.js",
+    "start": "NODE_ENV='production' node dist/server/server.js"
+  },
+  "author": "Netflux",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Netflux/QS-Server.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "express-validator": "^3.2.1",
+    "sqlite3": "^3.1.9"
+  }
+}
