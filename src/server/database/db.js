@@ -1,20 +1,9 @@
-import sqlite from 'sqlite3'
+import Sequelize from 'sequelize'
 import path from 'path'
 
-import schema from './schema'
-
-const db = new sqlite.Database(path.join(__dirname, '../../../dist/server/database/sqliteDB.sqlite'))
-
-db.serialize(() => {
-	// Create the tables defined in the schema
-	schema.tables.map(statement => {
-		db.run(statement)
-	})
-
-	// Initialize the tables with seed data
-	schema.seeds.map(statement => {
-		db.run(statement)
-	})
+const db = new Sequelize('QSDatabase', null, null, {
+	dialect: 'sqlite',
+	storage: path.join(__dirname, '../../../dist/server/database/QSDatabase.sqlite')
 })
 
 export default db

@@ -4,6 +4,7 @@
   "description": "Queue Management System powered by NodeJS",
   "main": "dist/server/server.js",
   "scripts": {
+	"clean": "rm -rf ./dist",
     "build": "babel src -d dist",
     "start-dev": "node dist/server/server.js",
     "start": "NODE_ENV='production' node dist/server/server.js"
@@ -22,6 +23,7 @@
     "body-parser": "^1.17.2",
     "express": "^4.15.4",
     "express-validator": "^3.2.1",
+    "sequelize": "^4.7.5",
     "sqlite3": "^3.1.9"
   }
 }

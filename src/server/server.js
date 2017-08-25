@@ -3,6 +3,8 @@ import bodyParser from 'body-parser'
 import ExpressValidator from 'express-validator'
 
 import loadRoutes from './routes'
+import db from './database/db'
+import { TicketModel, TicketLogModel, UserModel } from './database/models'
 
 // Create a new instance of the Express application
 const app = Express()
@@ -22,10 +24,27 @@ app.use(ExpressValidator({
 // Load the routes for the Express application
 loadRoutes(app)
 
-app.listen(port, err => {
-	if (err) {
-		console.error(err)
-	} else {
-		console.log(`QS-Server listening on port ${port}.`)
-	}
+// Verify the database connection
+db.authenticate().then(() => {
+	// Synchronize models to create database tables
+	TicketModel.sync()
+	TicketLogModel.sync()
+	UserModel.sync().then(() => {
+		return UserModel.upsert({
+			username: 'root',
+			password: '12345'
+		})
+	}).then(() => {
+		// Finally, start the Express application
+		app.listen(port, err => {
+			if (err) {
+				console.error(err)
+			} else {
+				console.log(`QS-Server listening on port ${port}.`)
+			}
+		})
+	})
+})
+.catch(err => {
+	console.error(`Database Connection Error: ${err}`)
 })
