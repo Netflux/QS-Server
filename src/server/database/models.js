@@ -26,7 +26,7 @@ const TicketModel = db.define('Ticket', {
 		type: Sequelize.BOOLEAN,
 		allowNull: false
 	}
-})
+}, { timestamps: false })
 
 // Ticket Logs used to keep track of tickets that have been updated
 // When updating local databases, reduce bandwidth usage by only fetch updated tickets:
@@ -38,7 +38,7 @@ const TicketLogModel = db.define('TicketLog', {
 		primaryKey: true,
 		autoIncrement: true
 	}
-})
+}, { timestamps: false })
 
 TicketLogModel.belongsTo(TicketModel, { foreignKey: 'ticket_id' })
 
@@ -57,6 +57,6 @@ const UserModel = db.define('User', {
 		type: Sequelize.STRING,
 		allowNull: false
 	}
-})
+}, { timestamps: false })
 
 export { TicketModel, TicketLogModel, UserModel }

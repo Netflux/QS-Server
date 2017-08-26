@@ -28,11 +28,10 @@ const loadRoutes = app => {
 					order: [ [ 'id', 'ASC' ] ]
 				}).then(ticketLogs => {
 					return {
-						lastID: ticketLogs.length > 0 ? ticketLogs[ticketLogs.length - 1].id : null,
+						lastID: ticketLogs.length > 0 ? ticketLogs[ticketLogs.length - 1].id : -1,
 						ticketIds: ticketLogs.map(log => log.ticket_id)
 							.filter((log, i, array) => array.indexOf(log) === i)
 					}
-
 				}).then(({ lastID, ticketIds }) => {
 					return TicketModel.findAll({
 						attributes: ticketAttrs,
@@ -75,20 +74,12 @@ const loadRoutes = app => {
 	})
 
 	app.post('/api/tickets', (req, res) => {
-		if (!req.body) {
-			return res.status(400).json({
-				error: 'Missing Parameter(s)',
-				fields: [ 'key' ]
-			})
-		}
-
 		req.checkBody('key', 'Invalid key').notEmpty().isString()
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
 				return res.status(400).json({
-					error: 'Invalid Parameter(s)',
-					fields: [ 'key' ]
+					error: result.useFirstErrorOnly().array()
 				})
 			}
 
@@ -101,26 +92,68 @@ const loadRoutes = app => {
 					time_created: Date.now(),
 					cancelled: false
 				}, { transaction: t }).then(ticket => {
-					// Return the new ticket data in the response
-					res.status(201).json({
-						data: {
-							id: ticket.id,
-							key: ticket.key,
-							time_created: ticket.time_created,
-							time_served: null,
-							duration: null,
-							cancelled: ticket.cancelled
-						}
-					})
-
 					// Create a ticket log entry
 					return TicketLogModel.create({
 						ticket_id: ticket.id
-					}, { transaction: t })
+					}, { transaction: t }).then(() => {
+						return ticket
+					})
+				})
+			}).then(ticket => {
+				// Return the new ticket data in the response
+				return res.status(201).json({
+					data: {
+						id: ticket.id,
+						key: ticket.key,
+						time_created: ticket.time_created,
+						time_served: null,
+						duration: null,
+						cancelled: ticket.cancelled
+					}
 				})
 			}).catch(err => {
 				console.error(err)
 				return res.sendStatus(500)
+			})
+		})
+	})
+
+	app.delete('/api/tickets/:id', (req, res) => {
+		req.checkParams('id', 'Invalid ID').isInt()
+		req.checkBody('key', 'Invalid key').notEmpty().isString()
+
+		req.getValidationResult().then(result => {
+			if (!result.isEmpty()) {
+				return res.status(400).json({
+					error: result.useFirstErrorOnly().array()
+				})
+			}
+
+			req.sanitizeParams('id').toInt()
+			req.sanitizeBody('key').escape()
+
+			db.transaction(t => {
+				// Update the ticket as cancelled
+				return TicketModel.update({ cancelled: true }, {
+					where: {
+						id: req.params.id,
+						key: req.body.key
+					}
+				}, { transaction: t }).then(result => {
+					if (result[0] !== 1) {
+						throw new Error(`Invalid number of tickets cancelled: ${result[0]}`)
+					}
+
+					// Create a ticket log entry
+					return TicketLogModel.create({
+						ticket_id: req.params.id
+					}, { transaction: t })
+				})
+			}).then(() => {
+				// Return a 'No Content' response header indicating success
+				res.sendStatus(204)
+			}).catch(err => {
+				return res.sendStatus(400)
 			})
 		})
 	})
