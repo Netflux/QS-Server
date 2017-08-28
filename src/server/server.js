@@ -1,6 +1,8 @@
+import HTTP from 'http'
 import Express from 'express'
 import bodyParser from 'body-parser'
 import ExpressValidator from 'express-validator'
+import WebSocket from 'ws'
 
 import loadRoutes from './routes'
 import db from './database/db'
@@ -9,6 +11,28 @@ import { TicketModel, TicketLogModel, UserModel } from './database/models'
 // Create a new instance of the Express application
 const app = Express()
 const port = process.env.PORT || 3000
+
+// Create a HTTP and WebSocket Server
+const server = HTTP.createServer(app)
+const wss = new WebSocket.Server({ server })
+
+// Setup WebSocket conenctions to timeout after 1 minute if not responding
+wss.on('connection', ws => {
+	ws.isAlive = true
+	ws.on('pong', () => {
+		ws.isAlive = true
+	})
+})
+setInterval(() => {
+	wss.clients.forEach(ws => {
+		if (ws.isAlive === false) {
+			return ws.terminate()
+		}
+
+		ws.isAlive = false
+		ws.ping('', false, true)
+	})
+}, 60000)
 
 // Enable parsing of application/json and application/x-www-form-urlencoded
 app.use(bodyParser.json())
@@ -22,7 +46,7 @@ app.use(ExpressValidator({
 }))
 
 // Load the routes for the Express application
-loadRoutes(app)
+loadRoutes(app, wss)
 
 // Verify the database connection
 db.authenticate().then(() => {
@@ -36,7 +60,7 @@ db.authenticate().then(() => {
 		})
 	}).then(() => {
 		// Finally, start the Express application
-		app.listen(port, err => {
+		server.listen(port, err => {
 			if (err) {
 				console.error(err)
 			} else {

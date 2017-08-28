@@ -1,3 +1,5 @@
+import WebSocket from 'ws'
+
 import db from './database/db'
 import { TicketModel, TicketLogModel, UserModel } from './database/models'
 
@@ -5,7 +7,15 @@ const ticketAttrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'c
 const ticketLogAttrs = [ 'id', 'ticket_id' ]
 
 // Helper function to initialize all routes for the Express application
-const loadRoutes = app => {
+const loadRoutes = (app, wss) => {
+	const broadcastTicketsUpdated = () => {
+		wss.clients.forEach(client => {
+			if (client.readyState === WebSocket.OPEN) {
+				client.send('MSG_TICKETS_UPDATED')
+			}
+		})
+	}
+
 	app.get('/api/tickets', (req, res) => {
 		if (req.query.lastID) {
 			req.checkQuery('lastID', 'Invalid lastID').isInt()
@@ -101,7 +111,7 @@ const loadRoutes = app => {
 				})
 			}).then(ticket => {
 				// Return the new ticket data in the response
-				return res.status(201).json({
+				res.status(201).json({
 					data: {
 						id: ticket.id,
 						key: ticket.key,
@@ -111,6 +121,9 @@ const loadRoutes = app => {
 						cancelled: ticket.cancelled
 					}
 				})
+
+				// Broadcast on WebSocket that ticket(s) have been updated
+				broadcastTicketsUpdated()
 			}).catch(err => {
 				console.error(err)
 				return res.sendStatus(500)
@@ -152,6 +165,9 @@ const loadRoutes = app => {
 			}).then(() => {
 				// Return a 'No Content' response header indicating success
 				res.sendStatus(204)
+
+				// Broadcast on WebSocket that ticket(s) have been updated
+				broadcastTicketsUpdated()
 			}).catch(err => {
 				return res.sendStatus(400)
 			})
@@ -168,7 +184,7 @@ const loadRoutes = app => {
 			},
 			order: [ [ 'id', 'ASC' ] ]
 		}).then(ticket => {
-			return res.json({ data: ticket })
+			res.json({ data: ticket })
 		}).catch(err => {
 			console.error(err)
 			return res.sendStatus(500)
