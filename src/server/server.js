@@ -1,10 +1,12 @@
+import Path from 'path'
 import HTTP from 'http'
 import Express from 'express'
+import WebSocket from 'ws'
+import Helmet from 'helmet'
 import bodyParser from 'body-parser'
 import ExpressValidator from 'express-validator'
-import WebSocket from 'ws'
 
-import loadRoutes from './routes'
+import setupRoutes from './routes'
 import db from './database/db'
 import { TicketModel, TicketLogModel, UserModel } from './database/models'
 
@@ -34,6 +36,12 @@ setInterval(() => {
 	})
 }, 60000)
 
+// Setup static content folder
+app.use(Express.static(Path.join(__dirname, '../../static')))
+
+// Enable Helmet middleware to set security-related HTTP headers
+app.use(Helmet())
+
 // Enable parsing of application/json and application/x-www-form-urlencoded
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -46,7 +54,7 @@ app.use(ExpressValidator({
 }))
 
 // Load the routes for the Express application
-loadRoutes(app, wss)
+setupRoutes(app, wss)
 
 // Verify the database connection
 db.authenticate().then(() => {
@@ -54,9 +62,14 @@ db.authenticate().then(() => {
 	TicketModel.sync()
 	TicketLogModel.sync()
 	UserModel.sync().then(() => {
-		return UserModel.upsert({
-			username: 'root',
-			password: '12345'
+		return UserModel.findOrCreate({
+			where: {
+				username: 'root'
+			},
+			defaults: {
+				username: 'root',
+				password: '12345'
+			}
 		})
 	}).then(() => {
 		// Finally, start the Express application
@@ -68,7 +81,6 @@ db.authenticate().then(() => {
 			}
 		})
 	})
-})
-.catch(err => {
+}).catch(err => {
 	console.error(`Database Connection Error: ${err}`)
 })

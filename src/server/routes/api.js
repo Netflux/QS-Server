@@ -1,13 +1,12 @@
 import WebSocket from 'ws'
 
-import db from './database/db'
-import { TicketModel, TicketLogModel, UserModel } from './database/models'
+import db from '../database/db'
+import { TicketModel, TicketLogModel, UserModel } from '../database/models'
 
 const ticketAttrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'cancelled' ]
 const ticketLogAttrs = [ 'id', 'ticket_id' ]
 
-// Helper function to initialize all routes for the Express application
-const loadRoutes = (app, wss) => {
+const setupAPI = (app, wss) => {
 	const broadcastTicketsUpdated = () => {
 		wss.clients.forEach(client => {
 			if (client.readyState === WebSocket.OPEN) {
@@ -190,6 +189,10 @@ const loadRoutes = (app, wss) => {
 			return res.sendStatus(500)
 		})
 	})
+
+	app.get('/api/*', (req, res) => {
+		res.sendStatus(404)
+	})
 }
 
-export default loadRoutes
+export default setupAPI
