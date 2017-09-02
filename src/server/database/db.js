@@ -3,7 +3,7 @@ import path from 'path'
 
 const db = new Sequelize('QSDatabase', null, null, {
 	dialect: 'sqlite',
-	storage: path.join(__dirname, '../../../dist/server/database/QSDatabase.sqlite'),
+	storage: path.join(__dirname, '../../../build/QSDatabase.sqlite'),
 	logging: false
 })
 

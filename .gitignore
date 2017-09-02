@@ -1,5 +1,7 @@
 # Compiled Code
-dist
+build/
+static/js/
+static/css/
 
 # Logs
 logs
