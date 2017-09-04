@@ -1,7 +1,8 @@
+import Path from 'path'
 
 const setupWeb = app => {
 	app.get('*', (req, res) => {
-		res.sendStatus(404)
+		res.sendFile('index.html', { root: Path.join(__dirname, '../../../static') })
 	})
 }
 
