@@ -1,0 +1,9 @@
+.ticket-display h1 {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+.ticket-display p {
+	font-size: 8rem;
+	height: 150px;
+	line-height: 125px;
+}

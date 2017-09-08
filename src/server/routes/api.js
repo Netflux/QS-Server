@@ -183,7 +183,7 @@ const setupAPI = (app, wss) => {
 			},
 			order: [ [ 'id', 'ASC' ] ]
 		}).then(ticket => {
-			res.json({ data: ticket })
+			res.json({ data: ticket ? ticket : -1 })
 		}).catch(err => {
 			console.error(err)
 			return res.sendStatus(500)

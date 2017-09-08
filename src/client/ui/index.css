@@ -1,0 +1,26 @@
+body {
+	font-family: 'Raleway', sans-serif;
+	color: #404040;
+}
+#app {
+	max-width: 1000px;
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+#content {
+	display: flex;
+	min-height: 100vh;
+	flex-direction: column;
+}
+main {
+	flex: 1;
+	padding: 1rem;
+}
+
+/* Utility Classes
+ * ==================== */
+.text-left		{ text-align: left; }
+.text-right		{ text-align: right; }
+.text-center	{ text-align: center; }
+.text-justify	{ text-align: justify; }
+.margin-none	{ margin: 0; }

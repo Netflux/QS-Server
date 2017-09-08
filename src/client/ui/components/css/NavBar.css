@@ -1,0 +1,13 @@
+.navbar a {
+	display: inline-block;
+	height: 56px;
+	line-height: 56px;
+	padding: 0 1rem;
+	color: #404040;
+	font-weight: bold;
+	text-decoration: none;
+	outline: 0;
+}
+.navbar a:hover {
+	text-decoration: underline;
+}
