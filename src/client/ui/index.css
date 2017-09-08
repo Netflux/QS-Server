@@ -2,6 +2,12 @@ body {
 	font-family: 'Raleway', sans-serif;
 	color: #404040;
 }
+#bundle-loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
 #app {
 	max-width: 1000px;
 	margin: 0 auto;

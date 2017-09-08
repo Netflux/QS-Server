@@ -28,6 +28,7 @@ const TicketDisplay = ({ curTicket }) => {
 	return (
 		<div className="ticket-display text-center">
 			<h1>All tickets served!</h1>
+			<img src="/images/task-done-flat.svg" alt="Tickets Served Image"/>
 		</div>
 	)
 }

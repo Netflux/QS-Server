@@ -6,11 +6,13 @@ import { BrowserRouter } from 'react-router-dom'
 import store from './store'
 import App from './ui'
 
+document.querySelector('#bundle-loading').remove()
+
 render(
 	<Provider store={store}>
 		<BrowserRouter>
 			<App />
 		</BrowserRouter>
 	</Provider>,
-	document.querySelector("#app")
+	document.querySelector('#app')
 )
