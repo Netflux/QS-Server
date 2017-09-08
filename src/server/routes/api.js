@@ -15,6 +15,16 @@ const setupAPI = (app, wss) => {
 		})
 	}
 
+	const getCurrentTicket = () => TicketModel.findOne({
+		attributes: ticketAttrs,
+		where: {
+			time_served: null,
+			duration: null,
+			cancelled: false
+		},
+		order: [ [ 'id', 'ASC' ] ]
+	})
+
 	app.get('/api/tickets', (req, res) => {
 		if (req.query.lastID) {
 			req.checkQuery('lastID', 'Invalid lastID').isInt()
@@ -94,35 +104,45 @@ const setupAPI = (app, wss) => {
 
 			req.sanitizeBody('key').escape()
 
-			db.transaction(t => {
-				// Create a new ticket
-				return TicketModel.create({
-					key: req.body.key,
-					time_created: Date.now(),
-					cancelled: false
-				}, { transaction: t }).then(ticket => {
-					// Create a ticket log entry
-					return TicketLogModel.create({
-						ticket_id: ticket.id
-					}, { transaction: t }).then(() => {
-						return ticket
-					})
-				})
-			}).then(ticket => {
-				// Return the new ticket data in the response
-				res.status(201).json({
-					data: {
-						id: ticket.id,
-						key: ticket.key,
-						time_created: ticket.time_created,
-						time_served: null,
-						duration: null,
-						cancelled: ticket.cancelled
-					}
-				})
+			getCurrentTicket().then(ticket => {
+				if (ticket) {
+					// Return the new ticket data in the response
+					return res.json({ data: ticket })
+				}
 
-				// Broadcast on WebSocket that ticket(s) have been updated
-				broadcastTicketsUpdated()
+				db.transaction(t => {
+					// Create a new ticket
+					return TicketModel.create({
+						key: req.body.key,
+						time_created: Date.now(),
+						cancelled: false
+					}, { transaction: t }).then(ticket => {
+						// Create a ticket log entry
+						return TicketLogModel.create({
+							ticket_id: ticket.id
+						}, { transaction: t }).then(() => {
+							return ticket
+						})
+					})
+				}).then(ticket => {
+					// Return the new ticket data in the response
+					res.status(201).json({
+						data: {
+							id: ticket.id,
+							key: ticket.key,
+							time_created: ticket.time_created,
+							time_served: null,
+							duration: null,
+							cancelled: ticket.cancelled
+						}
+					})
+
+					// Broadcast on WebSocket that ticket(s) have been updated
+					broadcastTicketsUpdated()
+				}).catch(err => {
+					console.error(err)
+					return res.sendStatus(500)
+				})
 			}).catch(err => {
 				console.error(err)
 				return res.sendStatus(500)
@@ -150,8 +170,9 @@ const setupAPI = (app, wss) => {
 					where: {
 						id: req.params.id,
 						key: req.body.key
-					}
-				}, { transaction: t }).then(result => {
+					},
+					transaction: t
+				}).then(result => {
 					if (result[0] !== 1) {
 						throw new Error(`Invalid number of tickets cancelled: ${result[0]}`)
 					}
@@ -168,21 +189,14 @@ const setupAPI = (app, wss) => {
 				// Broadcast on WebSocket that ticket(s) have been updated
 				broadcastTicketsUpdated()
 			}).catch(err => {
+				console.error(err)
 				return res.sendStatus(400)
 			})
 		})
 	})
 
 	app.get('/api/tickets/current', (req, res) => {
-		TicketModel.findOne({
-			attributes: ticketAttrs,
-			where: {
-				time_served: null,
-				duration: null,
-				cancelled: false
-			},
-			order: [ [ 'id', 'ASC' ] ]
-		}).then(ticket => {
+		getCurrentTicket().then(ticket => {
 			res.json({ data: ticket ? ticket : -1 })
 		}).catch(err => {
 			console.error(err)

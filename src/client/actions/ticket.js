@@ -7,9 +7,9 @@ export const fetchCurTicket = () => dispatch => {
 				return response.json()
 			}
 			throw new Error(`HTTP Error ${response.status}: Failed to fetch current ticket`)
-		})
-		.then(json => dispatch(receiveCurTicket(json.data)))
-		.catch(err => {
+		}).then(json => {
+			dispatch(receiveCurTicket(json.data ? json.data.id : -1))
+		}).catch(err => {
 			dispatch(receiveCurTicketError())
 		})
 }
