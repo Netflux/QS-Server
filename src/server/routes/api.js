@@ -25,6 +25,43 @@ const setupAPI = (app, wss) => {
 		order: [ [ 'id', 'ASC' ] ]
 	})
 
+	app.post('/api/login', (req, res) => {
+		req.checkBody('username', 'Invalid username').notEmpty().isString()
+		req.checkBody('password', 'Invalid password').notEmpty().isString()
+
+		req.getValidationResult().then(result => {
+			if (!result.isEmpty()) {
+				return res.status(400).json({
+					error: result.useFirstErrorOnly().array()
+				})
+			}
+
+			req.sanitizeBody('username').escape()
+			req.sanitizeBody('password').escape()
+
+			Passport.authenticate('local', (err, user, info) => {
+				if (err) {
+					console.error(err)
+					return res.sendStatus(500)
+				}
+				if (!user) { return res.sendStatus(403) }
+
+				req.login(user, err => {
+					if (err) {
+						console.error(err)
+						return res.sendStatus(500)
+					}
+					return res.sendStatus(200)
+				})
+			})(req, res)
+		})
+	})
+
+	app.get('/api/logout', (req, res) => {
+		req.logout()
+		res.sendStatus(200)
+	})
+
 	app.get('/api/tickets', (req, res) => {
 		if (req.query.lastID) {
 			req.checkQuery('lastID', 'Invalid lastID').isInt()
@@ -32,8 +69,7 @@ const setupAPI = (app, wss) => {
 			req.getValidationResult().then(result => {
 				if (!result.isEmpty()) {
 					return res.status(400).json({
-						error: 'Invalid Parameter(s)',
-						fields: [ 'lastID' ]
+						error: result.useFirstErrorOnly().array()
 					})
 				}
 
@@ -152,7 +188,9 @@ const setupAPI = (app, wss) => {
 
 	app.delete('/api/tickets/:id', (req, res) => {
 		req.checkParams('id', 'Invalid ID').isInt()
-		req.checkBody('key', 'Invalid key').notEmpty().isString()
+		if (!req.user) {
+			req.checkBody('key', 'Invalid key').notEmpty().isString()
+		}
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
@@ -165,12 +203,16 @@ const setupAPI = (app, wss) => {
 			req.sanitizeBody('key').escape()
 
 			db.transaction(t => {
+				const whereClause = !req.user ? {
+					id: req.params.id,
+					key: req.body.key
+				} : {
+					id: req.params.id,
+				}
+
 				// Update the ticket as cancelled
 				return TicketModel.update({ cancelled: true }, {
-					where: {
-						id: req.params.id,
-						key: req.body.key
-					},
+					where: whereClause,
 					transaction: t
 				}).then(result => {
 					if (result[0] !== 1) {
