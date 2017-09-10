@@ -1,3 +1,4 @@
+import Passport from 'passport'
 import WebSocket from 'ws'
 
 import db from '../database/db'
@@ -25,6 +26,14 @@ const setupAPI = (app, wss) => {
 		order: [ [ 'id', 'ASC' ] ]
 	})
 
+	app.get('/api/login', (req, res) => {
+		if (!req.user) {
+			return res.sendStatus(403)
+		}
+
+		res.sendStatus(200)
+	})
+
 	app.post('/api/login', (req, res) => {
 		req.checkBody('username', 'Invalid username').notEmpty().isString()
 		req.checkBody('password', 'Invalid password').notEmpty().isString()
@@ -39,7 +48,7 @@ const setupAPI = (app, wss) => {
 			req.sanitizeBody('username').escape()
 			req.sanitizeBody('password').escape()
 
-			Passport.authenticate('local', (err, user, info) => {
+			Passport.authenticate('local', (err, user) => {
 				if (err) {
 					console.error(err)
 					return res.sendStatus(500)
@@ -239,7 +248,7 @@ const setupAPI = (app, wss) => {
 
 	app.get('/api/tickets/current', (req, res) => {
 		getCurrentTicket().then(ticket => {
-			res.json({ data: ticket ? ticket : -1 })
+			res.json({ data: ticket })
 		}).catch(err => {
 			console.error(err)
 			return res.sendStatus(500)

@@ -1,4 +1,4 @@
-.navbar a {
+.navbar a, .navbar span {
 	display: inline-block;
 	height: 56px;
 	line-height: 56px;
@@ -6,8 +6,12 @@
 	color: #404040;
 	font-weight: bold;
 	text-decoration: none;
+	cursor: pointer;
 	outline: 0;
 }
-.navbar a:hover {
+.navbar a:hover, .navbar span:hover {
 	text-decoration: underline;
+}
+.navbar .active {
+	color: #009688;
 }

@@ -1,16 +1,3 @@
 .ticket-tools {
 	padding-top: 3rem;
 }
-.ticket-tools button {
-	width: 100%;
-	padding: 0.66rem;
-	cursor: pointer;
-	color: #404040;
-	background-color: #EEE;
-	border: 0;
-	border-radius: 4px;
-	transition: background-color 0.2s;
-}
-.ticket-tools button:hover {
-	background-color: #DDD;
-}

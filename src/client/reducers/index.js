@@ -1,6 +1,9 @@
 import { combineReducers } from 'redux'
 
-import { REQUEST_CUR_TICKET, RECEIVE_CUR_TICKET, RECEIVE_CUR_TICKET_ERROR } from '../actions'
+import {
+	REQUEST_CUR_TICKET, RECEIVE_CUR_TICKET, RECEIVE_CUR_TICKET_ERROR,
+	REQUEST_USER, RECEIVE_USER_SUCCESS, RECEIVE_USER_ERROR
+} from '../actions'
 
 const curTicket = (state = {
 	lastFetched: false,
@@ -29,8 +32,37 @@ const curTicket = (state = {
 	return state
 }
 
+const user = (state = {
+	isFetching: false,
+	isLoggedIn: false,
+	error: false
+}, action) => {
+	switch (action.type) {
+		case REQUEST_USER:
+			return {
+				...state,
+				isFetching: true,
+				error: false
+			}
+		case RECEIVE_USER_SUCCESS:
+			return {
+				...state,
+				isFetching: false,
+				isLoggedIn: action.payload
+			}
+		case RECEIVE_USER_ERROR:
+			return {
+				...state,
+				isFetching: false,
+				error: true
+			}
+	}
+	return state
+}
+
 const rootReducer = combineReducers({
-	curTicket
+	curTicket,
+	user
 })
 
 export default rootReducer

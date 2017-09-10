@@ -1,20 +1,23 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Switch, Route } from 'react-router'
+import { withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { NavBar, Footer } from './components'
-import { HomePage, AboutPage, NotFoundPage } from './pages'
-import { fetchCurTicket } from '../actions'
+import { HomePage, AboutPage, LoginPage, NotFoundPage } from './pages'
+import { fetchCurTicket, handleCheckLogin } from '../actions'
 import './index.css'
 
 const mapDispatchToProps = dispatch => ({
-	fetchCurTicket: () => dispatch(fetchCurTicket())
+	fetchCurTicket: () => dispatch(fetchCurTicket()),
+	handleCheckLogin: () => dispatch(handleCheckLogin())
 })
 
 class App extends React.Component {
 	componentDidMount() {
 		this.props.fetchCurTicket()
+		this.props.handleCheckLogin()
 	}
 
 	render() {
@@ -25,6 +28,7 @@ class App extends React.Component {
 				<Switch>
 					<Route exact path="/" component={HomePage}/>
 					<Route exact path="/about" component={AboutPage}/>
+					<Route exact path="/login" component={LoginPage}/>
 					<Route component={NotFoundPage}/>
 				</Switch>
 
@@ -35,7 +39,8 @@ class App extends React.Component {
 }
 
 App.propTypes = {
-
+	fetchCurTicket: PropTypes.func.isRequired,
+	handleCheckLogin: PropTypes.func.isRequired
 }
 
-export default connect(null, mapDispatchToProps)(App)
+export default withRouter(connect(null, mapDispatchToProps)(App))

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import './css/PageHeader.css'
 
 const PageHeader = ({ title }) => (
-	<header className="pageheader">
+	<header className="page-header">
 		<h1>{title}</h1>
 	</header>
 )

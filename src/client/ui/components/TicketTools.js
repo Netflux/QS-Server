@@ -13,18 +13,16 @@ const mapDispatchToProps = dispatch => ({
 	fetchCurTicket: () => dispatch(fetchCurTicket())
 })
 
-const TicketTools = ({ curTicket, fetchCurTicket }) => {
-	const btnDisabled = (curTicket.lastFetched && curTicket.id === -1) || curTicket.isFetching
-
-	return (
-		<div className="ticket-tools grid">
-			<div className="col"><button onClick={fetchCurTicket}>Refresh</button></div>
-			{
-				!btnDisabled && <div className="col"><button>Next Ticket</button></div>
-			}
-		</div>
-	)
-}
+const TicketTools = ({ curTicket, fetchCurTicket }) => (
+	<div className="ticket-tools grid">
+		<div className="col"><button onClick={fetchCurTicket} disabled={curTicket.isFetching}>Refresh</button></div>
+		{
+			!(curTicket.lastFetched && curTicket.id === -1) && (
+				<div className="col"><button disabled={curTicket.isFetching}>Next Ticket</button></div>
+			)
+		}
+	</div>
+)
 
 TicketTools.propTypes = {
 	curTicket: PropTypes.object.isRequired,

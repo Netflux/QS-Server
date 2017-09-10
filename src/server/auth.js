@@ -11,18 +11,19 @@ const hashPassword = password => new Promise((fulfill, reject) => {
 		if (err) { return reject(err) }
 		Crypto.pbkdf2(password, salt, 10000, 64, 'sha512', (err, key) => {
 			if (err) { return reject(err) }
-			fulfill(salt + key)
+			fulfill(JSON.stringify({ salt: salt.toString('binary'), hash: key.toString('binary') }))
 		})
 	})
 })
 
 const verifyPassword = (password, combined) => new Promise((fulfill, reject) => {
-	const salt = combined.slice(0, 16)
-	const hash = combined.slice(16, combined.length)
+	const parsed = JSON.parse(combined)
+	const salt = Buffer.from(parsed.salt, 'binary')
+	const hash = Buffer.from(parsed.hash, 'binary')
 
 	Crypto.pbkdf2(password, salt, 10000, 64, 'sha512', (err, key) => {
 		if (err) { return reject(err) }
-		fulfill(key === hash)
+		fulfill(key.toString() === hash.toString())
 	})
 })
 
@@ -42,12 +43,12 @@ const setupAuth = (app, db) => {
 	// Set up the LocalStrategy for login authentication
 	Passport.use(new LocalStrategy((username, password, done) => {
 		findUserByUsername(username).then(user => {
-			if (!user) { return done(null, false, { message: 'Invalid username or password' }) }
-			return verifyPassword(password, user.password)
-		}).then(res => {
-			if (!res) { return done(null, false, { message: 'Invalid username or password' }) }
-			return done(null, user)
-		}).catch(err => done(err))
+			if (!user) { throw new Error(403) }
+			return verifyPassword(password, user.password).then(res => {
+				if (!res) { throw new Error(403) }
+				return done(null, user)
+			})
+		}).catch(err => err.message === '403' ? done(null, false) : done(err))
 	}))
 
 	app.use(Session({

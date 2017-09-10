@@ -1,0 +1,36 @@
+.login-form {
+	max-width: 320px;
+	margin: 0 auto;
+	padding: 1rem;
+	border-radius: 4px;
+	box-shadow: 0 0 4px rgba(64, 64, 64, 0.2);
+}
+.login-form hr {
+	color: #FFF;
+}
+.login-form p {
+	margin-top: 1.33rem;
+	margin-bottom: 0;
+}
+.login-form p:nth-of-type(even) {
+	margin-top: 0.66rem;
+}
+.login-form input {
+	width: 100%;
+	padding: 4px;
+	box-sizing: border-box;
+	border-radius: 4px;
+	border: 1px solid rgba(64, 64, 64, 0.5);
+}
+.login-form input:focus {
+	border: 1px solid rgba(0, 150, 136, 0.5);
+	box-shadow: 0 0 4px rgba(0, 150, 136, 0.2);
+}
+.login-form button {
+	margin-top: 1.33rem;
+}
+.login-form .error {
+	margin-bottom: -0.66rem;
+	color: #D32F2F;
+	font-weight: bold;
+}

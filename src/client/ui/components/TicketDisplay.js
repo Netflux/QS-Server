@@ -15,7 +15,7 @@ const TicketDisplay = ({ curTicket }) => {
 			<div className="ticket-display text-center">
 				<h1>Currently Serving:</h1>
 				{
-					curTicket.id > -1 ? (
+					curTicket.id > -1 && !curTicket.isFetching ? (
 						<p className="margin-none">{curTicket.id}</p>
 					) : (
 						<LoadRipple size={150}/>
