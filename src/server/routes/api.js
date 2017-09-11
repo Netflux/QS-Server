@@ -2,7 +2,7 @@ import Passport from 'passport'
 import WebSocket from 'ws'
 
 import db from '../database/db'
-import { TicketModel, TicketLogModel, UserModel } from '../database/models'
+import { TicketModel, TicketLogModel } from '../database/models'
 
 const ticketAttrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'cancelled' ]
 const ticketLogAttrs = [ 'id', 'ticket_id' ]

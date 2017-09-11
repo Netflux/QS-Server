@@ -7,7 +7,7 @@ export const handleCheckLogin = () => dispatch => {
 				return dispatch(receiveUserSuccess(true))
 			}
 			throw new Error(`HTTP Error ${response.status}: No previous login`)
-		}).catch(err => {
+		}).catch(() => {
 			dispatch(receiveUserSuccess(false))
 		})
 }
@@ -31,7 +31,7 @@ export const handleLogin = (username, password) => dispatch => {
 				return dispatch(receiveUserSuccess(true))
 			}
 			throw new Error(`HTTP Error ${response.status}: Failed to login`)
-		}).catch(err => {
+		}).catch(() => {
 			dispatch(receiveUserError())
 		})
 }
@@ -45,7 +45,7 @@ export const handleLogout = () => dispatch => {
 				return dispatch(receiveUserSuccess(false))
 			}
 			throw new Error(`HTTP Error ${response.status}: Failed to logout`)
-		}).catch(err => {
+		}).catch(() => {
 			dispatch(receiveUserError())
 		})
 }

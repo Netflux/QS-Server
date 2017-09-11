@@ -11,23 +11,23 @@ const curTicket = (state = {
 	id: -1
 }, action) => {
 	switch (action.type) {
-		case REQUEST_CUR_TICKET:
-			return {
-				...state,
-				isFetching: true
-			}
-		case RECEIVE_CUR_TICKET:
-			return {
-				...state,
-				lastFetched: Date.now(),
-				isFetching: false,
-				id: action.payload
-			}
-		case RECEIVE_CUR_TICKET_ERROR:
-			return {
-				...state,
-				isFetching: false
-			}
+	case REQUEST_CUR_TICKET:
+		return {
+			...state,
+			isFetching: true
+		}
+	case RECEIVE_CUR_TICKET:
+		return {
+			...state,
+			lastFetched: Date.now(),
+			isFetching: false,
+			id: action.payload
+		}
+	case RECEIVE_CUR_TICKET_ERROR:
+		return {
+			...state,
+			isFetching: false
+		}
 	}
 	return state
 }
@@ -38,24 +38,24 @@ const user = (state = {
 	error: false
 }, action) => {
 	switch (action.type) {
-		case REQUEST_USER:
-			return {
-				...state,
-				isFetching: true,
-				error: false
-			}
-		case RECEIVE_USER_SUCCESS:
-			return {
-				...state,
-				isFetching: false,
-				isLoggedIn: action.payload
-			}
-		case RECEIVE_USER_ERROR:
-			return {
-				...state,
-				isFetching: false,
-				error: true
-			}
+	case REQUEST_USER:
+		return {
+			...state,
+			isFetching: true,
+			error: false
+		}
+	case RECEIVE_USER_SUCCESS:
+		return {
+			...state,
+			isFetching: false,
+			isLoggedIn: action.payload
+		}
+	case RECEIVE_USER_ERROR:
+		return {
+			...state,
+			isFetching: false,
+			error: true
+		}
 	}
 	return state
 }
