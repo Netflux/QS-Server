@@ -152,7 +152,7 @@ const setupAPI = (app, wss) => {
 			req.sanitizeBody('key').escape()
 
 			getCurrentTicket().then(ticket => {
-				if (ticket.key === req.body.key) {
+				if (ticket && ticket.key === req.body.key) {
 					// Return the new ticket data in the response
 					return res.json({ data: ticket })
 				}
