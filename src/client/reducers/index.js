@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux'
 
 import {
-	REQUEST_CUR_TICKET, RECEIVE_CUR_TICKET, RECEIVE_CUR_TICKET_ERROR,
+	REQUEST_TICKET, RECEIVE_CUR_TICKET, RECEIVE_TICKET_ERROR,
 	REQUEST_USER, RECEIVE_USER_SUCCESS, RECEIVE_USER_ERROR
 } from '../actions'
 
@@ -11,7 +11,7 @@ const curTicket = (state = {
 	id: -1
 }, action) => {
 	switch (action.type) {
-	case REQUEST_CUR_TICKET:
+	case REQUEST_TICKET:
 		return {
 			...state,
 			isFetching: true
@@ -23,7 +23,7 @@ const curTicket = (state = {
 			isFetching: false,
 			id: action.payload
 		}
-	case RECEIVE_CUR_TICKET_ERROR:
+	case RECEIVE_TICKET_ERROR:
 		return {
 			...state,
 			isFetching: false

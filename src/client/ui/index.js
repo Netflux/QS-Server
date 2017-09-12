@@ -9,15 +9,35 @@ import { HomePage, AboutPage, LoginPage, NotFoundPage } from './pages'
 import { fetchCurTicket, handleCheckLogin } from '../actions'
 import './index.css'
 
+const mapStateToProps = state => ({
+	ticketId: state.curTicket.id
+})
+
 const mapDispatchToProps = dispatch => ({
 	fetchCurTicket: () => dispatch(fetchCurTicket()),
 	handleCheckLogin: () => dispatch(handleCheckLogin())
 })
 
 class App extends React.Component {
+	constructor(props) {
+		super(props)
+
+		this.ws = new WebSocket(`ws://${location.host}/`)
+		this.ws.addEventListener('message', ({ data }) => {
+			const shouldFetch = (data.includes('MSG_TICKETS_CREATED') && this.props.ticketId === -1) || data.includes('MSG_TICKETS_UPDATED')
+			if (shouldFetch) {
+				this.props.fetchCurTicket()
+			}
+		})
+	}
+
 	componentDidMount() {
 		this.props.fetchCurTicket()
 		this.props.handleCheckLogin()
+	}
+
+	componentWillUnmount() {
+		this.ws.close()
 	}
 
 	render() {
@@ -39,8 +59,9 @@ class App extends React.Component {
 }
 
 App.propTypes = {
+	ticketId: PropTypes.number.isRequired,
 	fetchCurTicket: PropTypes.func.isRequired,
 	handleCheckLogin: PropTypes.func.isRequired
 }
 
-export default withRouter(connect(null, mapDispatchToProps)(App))
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App))

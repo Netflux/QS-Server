@@ -8,10 +8,12 @@ const ticketAttrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'c
 const ticketLogAttrs = [ 'id', 'ticket_id' ]
 
 const setupAPI = (app, wss) => {
-	const broadcastTicketsUpdated = () => {
+	const MSG_TICKETS_CREATED = 'MSG_TICKETS_CREATED'
+	const MSG_TICKETS_UPDATED = 'MSG_TICKETS_UPDATED'
+	const broadcastTicketsUpdated = message => {
 		wss.clients.forEach(client => {
 			if (client.readyState === WebSocket.OPEN) {
-				client.send('MSG_TICKETS_UPDATED')
+				client.send(message)
 			}
 		})
 	}
@@ -183,7 +185,7 @@ const setupAPI = (app, wss) => {
 					})
 
 					// Broadcast on WebSocket that ticket(s) have been updated
-					broadcastTicketsUpdated()
+					broadcastTicketsUpdated(MSG_TICKETS_CREATED)
 				}).catch(err => {
 					console.error(err)
 					return res.sendStatus(500)
@@ -197,9 +199,7 @@ const setupAPI = (app, wss) => {
 
 	app.delete('/api/tickets/:id', (req, res) => {
 		req.checkParams('id', 'Invalid ID').isInt()
-		if (!req.user) {
-			req.checkBody('key', 'Invalid key').notEmpty().isString()
-		}
+		req.checkBody('key', 'Invalid key').notEmpty().isString()
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
@@ -212,16 +212,12 @@ const setupAPI = (app, wss) => {
 			req.sanitizeBody('key').escape()
 
 			db.transaction(t => {
-				const whereClause = !req.user ? {
-					id: req.params.id,
-					key: req.body.key
-				} : {
-					id: req.params.id,
-				}
-
 				// Update the ticket as cancelled
 				return TicketModel.update({ cancelled: true }, {
-					where: whereClause,
+					where: {
+						id: req.params.id,
+						key: req.body.key
+					},
 					transaction: t
 				}).then(result => {
 					if (result[0] !== 1) {
@@ -238,7 +234,7 @@ const setupAPI = (app, wss) => {
 				res.sendStatus(204)
 
 				// Broadcast on WebSocket that ticket(s) have been updated
-				broadcastTicketsUpdated()
+				broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
 			}).catch(err => {
 				console.error(err)
 				return res.sendStatus(400)
@@ -252,6 +248,47 @@ const setupAPI = (app, wss) => {
 		}).catch(err => {
 			console.error(err)
 			return res.sendStatus(500)
+		})
+	})
+
+	app.get('/api/tickets/next', (req, res) => {
+		if (!req.user) {
+			return res.sendStatus(403)
+		}
+
+		db.transaction(t => {
+			// Update the ticket as cancelled
+			return getCurrentTicket().then(ticket => {
+				if (!ticket) {
+					// All tickets have been served, end transaction
+					return true
+				}
+
+				return TicketModel.update({ cancelled: true }, {
+					where: { id: ticket.id },
+					order: [ [ 'id', 'ASC' ] ],
+					limit: 1,
+					transaction: t
+				}).then(result => {
+					if (result[0] !== 1) {
+						throw new Error(`Invalid number of tickets cancelled: ${result[0]}`)
+					}
+
+					// Create a ticket log entry
+					return TicketLogModel.create({
+						ticket_id: ticket.id
+					}, { transaction: t })
+				})
+			})
+		}).then(() => {
+			// Return a 'No Content' response header indicating success
+			res.sendStatus(204)
+
+			// Broadcast on WebSocket that ticket(s) have been updated
+			broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
+		}).catch(err => {
+			console.error(err)
+			return res.sendStatus(400)
 		})
 	})
 
