@@ -19,8 +19,11 @@ const mapDispatchToProps = dispatch => ({
 })
 
 class App extends React.Component {
-	constructor(props) {
-		super(props)
+	setupWebSocket() {
+		const reconnectHandler = () => {
+			clearTimeout(this.WebSocketTimeout)
+			this.WebSocketTimeout = setTimeout(() => this.setupWebSocket(), 10000)
+		}
 
 		this.ws = new WebSocket(`ws://${location.host}/`)
 		this.ws.addEventListener('message', ({ data }) => {
@@ -29,11 +32,14 @@ class App extends React.Component {
 				this.props.fetchCurTicket()
 			}
 		})
+		this.ws.addEventListener('open', () => this.props.fetchCurTicket())
+		this.ws.addEventListener('close', reconnectHandler)
+		this.ws.addEventListener('error', reconnectHandler)
 	}
 
 	componentDidMount() {
-		this.props.fetchCurTicket()
 		this.props.handleCheckLogin()
+		this.setupWebSocket()
 	}
 
 	componentWillUnmount() {
