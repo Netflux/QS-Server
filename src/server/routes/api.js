@@ -1,11 +1,7 @@
 import Passport from 'passport'
 import WebSocket from 'ws'
 
-import db from '../database/db'
-import { TicketModel, TicketLogModel } from '../database/models'
-
-const ticketAttrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'cancelled' ]
-const ticketLogAttrs = [ 'id', 'ticket_id' ]
+import { TicketModel } from '../database/models'
 
 const setupAPI = (app, wss) => {
 	const MSG_TICKETS_CREATED = 'MSG_TICKETS_CREATED'
@@ -17,16 +13,6 @@ const setupAPI = (app, wss) => {
 			}
 		})
 	}
-
-	const getCurrentTicket = () => TicketModel.findOne({
-		attributes: ticketAttrs,
-		where: {
-			time_served: null,
-			duration: null,
-			cancelled: false
-		},
-		order: [ [ 'id', 'ASC' ] ]
-	})
 
 	app.get('/api/login', (req, res) => {
 		if (!req.user) {
@@ -42,9 +28,7 @@ const setupAPI = (app, wss) => {
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
-				return res.status(400).json({
-					error: result.useFirstErrorOnly().array()
-				})
+				return res.status(422).json({ error: result.useFirstErrorOnly().array() })
 			}
 
 			req.sanitizeBody('username').escape()
@@ -74,125 +58,74 @@ const setupAPI = (app, wss) => {
 	})
 
 	app.get('/api/tickets', (req, res) => {
-		if (req.query.lastID) {
-			req.checkQuery('lastID', 'Invalid lastID').isInt()
+		if (req.query.timestamp) {
+			req.checkQuery('timestamp', 'Invalid timestamp').isInt()
+		}
 
-			req.getValidationResult().then(result => {
-				if (!result.isEmpty()) {
-					return res.status(400).json({
-						error: result.useFirstErrorOnly().array()
-					})
-				}
+		req.getValidationResult().then(result => {
+			if (!result.isEmpty()) {
+				return res.status(422).json({ error: result.useFirstErrorOnly().array() })
+			}
 
-				req.sanitizeQuery('lastID').toInt()
+			req.sanitizeQuery('timestamp').toInt()
 
-				TicketLogModel.findAll({
-					attributes: ticketLogAttrs,
-					where: {
-						id: { $gt: req.query.lastID }
-					},
-					order: [ [ 'id', 'ASC' ] ]
-				}).then(ticketLogs => {
-					return {
-						lastID: ticketLogs.length > 0 ? ticketLogs[ticketLogs.length - 1].id : -1,
-						ticketIds: ticketLogs.map(log => log.ticket_id)
-							.filter((log, i, array) => array.indexOf(log) === i)
-					}
-				}).then(({ lastID, ticketIds }) => {
-					return TicketModel.findAll({
-						attributes: ticketAttrs,
-						where: {
-							id: { $in: ticketIds }
-						},
-						order: [ [ 'id', 'ASC' ] ]
-					}).then(tickets => {
-						return {
-							lastID,
-							data: tickets
-						}
-					})
-				}).then(payload => {
-					return res.json(payload)
-				}).catch(err => {
-					console.error(err)
-					return res.sendStatus(500)
-				})
-			})
-		} else {
+			const timestamp = req.query.timestamp || 0
+
 			TicketModel.findAll({
-				attributes: ticketAttrs,
+				attributes: req.user ? [ ...TicketModel.attrs, 'secret' ] : TicketModel.attrs,
+				where: {
+					$or: [
+						{ createdAt: { $gt: timestamp } },
+						{ updatedAt: { $gt: timestamp } }
+					]
+				},
 				order: [ [ 'id', 'ASC' ] ]
 			}).then(tickets => {
-				return TicketLogModel.findOne({
-					attributes: ticketLogAttrs,
-					order: [ [ 'id', 'DESC' ] ]
-				}).then(log => {
-					return res.json({
-						lastID: log ? log.id : -1,
-						data: tickets
-					})
-				})
+				return res.json({ data: tickets })
 			}).catch(err => {
 				console.error(err)
-				return res.sendStatus(500)
+				res.sendStatus(500)
 			})
-		}
+		})
 	})
 
 	app.post('/api/tickets', (req, res) => {
 		req.checkBody('key', 'Invalid key').notEmpty().isString()
+		req.checkBody('secret', 'Invalid secret').notEmpty().isString()
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
-				return res.status(400).json({
-					error: result.useFirstErrorOnly().array()
-				})
+				return res.status(422).json({ error: result.useFirstErrorOnly().array() })
 			}
 
 			req.sanitizeBody('key').escape()
+			req.sanitizeBody('secret').escape()
 
-			getCurrentTicket().then(ticket => {
-				if (ticket && ticket.key === req.body.key) {
-					// Return the new ticket data in the response
-					return res.json({ data: ticket })
+			TicketModel.findOrCreate({
+				attributes: [ ...TicketModel.attrs, 'secret' ],
+				where: {
+					key: req.body.key,
+					secret: req.body.secret,
+					status: { $in: [ TicketModel.status.PENDING, TicketModel.status.SERVING ] }
+				},
+				order: [ [ 'id', 'ASC' ] ],
+				defaults: {
+					key: req.body.key,
+					secret: req.body.secret,
+					time_created: Date.now(),
+					status: TicketModel.status.PENDING
 				}
+			}).spread((ticket, created) => {
+				if (created) { res.status(201) }
 
-				db.transaction(t => {
-					// Create a new ticket
-					return TicketModel.create({
-						key: req.body.key,
-						time_created: Date.now(),
-						cancelled: false
-					}, { transaction: t }).then(ticket => {
-						// Create a ticket log entry
-						return TicketLogModel.create({
-							ticket_id: ticket.id
-						}, { transaction: t }).then(() => {
-							return ticket
-						})
-					})
-				}).then(ticket => {
-					// Return the new ticket data in the response
-					res.status(201).json({
-						data: {
-							id: ticket.id,
-							key: ticket.key,
-							time_created: ticket.time_created,
-							time_served: null,
-							duration: null,
-							cancelled: ticket.cancelled
-						}
-					})
+				// Return the ticket data in the response
+				res.json({ data: ticket.dataValues })
 
-					// Broadcast on WebSocket that ticket(s) have been updated
-					broadcastTicketsUpdated(MSG_TICKETS_CREATED)
-				}).catch(err => {
-					console.error(err)
-					return res.sendStatus(500)
-				})
+				// Broadcast on WebSocket that ticket(s) have been updated
+				return broadcastTicketsUpdated(MSG_TICKETS_CREATED)
 			}).catch(err => {
 				console.error(err)
-				return res.sendStatus(500)
+				res.sendStatus(500)
 			})
 		})
 	})
@@ -200,54 +133,51 @@ const setupAPI = (app, wss) => {
 	app.delete('/api/tickets/:id', (req, res) => {
 		req.checkParams('id', 'Invalid ID').isInt()
 		req.checkBody('key', 'Invalid key').notEmpty().isString()
+		req.checkBody('secret', 'Invalid secret').notEmpty().isString()
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
-				return res.status(400).json({
-					error: result.useFirstErrorOnly().array()
-				})
+				return res.status(422).json({ error: result.useFirstErrorOnly().array() })
 			}
 
 			req.sanitizeParams('id').toInt()
 			req.sanitizeBody('key').escape()
+			req.sanitizeBody('secret').escape()
 
-			db.transaction(t => {
-				// Update the ticket as cancelled
-				return TicketModel.update({ cancelled: true }, {
-					where: {
-						id: req.params.id,
-						key: req.body.key
-					},
-					transaction: t
-				}).then(result => {
-					if (result[0] !== 1) {
-						throw new Error(`Invalid number of tickets cancelled: ${result[0]}`)
-					}
+			// Update the ticket as cancelled
+			TicketModel.update({ status: TicketModel.status.CANCELLED }, {
+				where: {
+					id: req.params.id,
+					key: req.body.key,
+					secret: req.body.secret
+				}
+			}).then(result => {
+				if (result[0] !== 1) {
+					return res.sendStatus(422)
+				}
 
-					// Create a ticket log entry
-					return TicketLogModel.create({
-						ticket_id: req.params.id
-					}, { transaction: t })
-				})
-			}).then(() => {
 				// Return a 'No Content' response header indicating success
 				res.sendStatus(204)
 
 				// Broadcast on WebSocket that ticket(s) have been updated
-				broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
+				return broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
 			}).catch(err => {
 				console.error(err)
-				return res.sendStatus(400)
+				res.sendStatus(500)
 			})
 		})
 	})
 
 	app.get('/api/tickets/current', (req, res) => {
-		getCurrentTicket().then(ticket => {
-			res.json({ data: ticket })
+		TicketModel.findOne({
+			attributes: TicketModel.attrs,
+			where: { status: TicketModel.status.SERVING },
+			order: [ [ 'id', 'ASC' ] ]
+		}).then(ticket => {
+			return res.json({ data: ticket })
 		}).catch(err => {
 			console.error(err)
-			return res.sendStatus(500)
+			res.sendStatus(500)
 		})
 	})
 
@@ -256,39 +186,22 @@ const setupAPI = (app, wss) => {
 			return res.sendStatus(403)
 		}
 
-		db.transaction(t => {
-			// Update the ticket as cancelled
-			return getCurrentTicket().then(ticket => {
-				if (!ticket) {
-					// All tickets have been served, end transaction
-					return true
-				}
+		// Update the ticket as served
+		TicketModel.update({ status: TicketModel.status.SERVED }, {
+			where: { status: TicketModel.status.SERVING }
+		}).then(result => {
+			if (result[0] !== 1) {
+				return res.sendStatus(422)
+			}
 
-				return TicketModel.update({ cancelled: true }, {
-					where: { id: ticket.id },
-					order: [ [ 'id', 'ASC' ] ],
-					limit: 1,
-					transaction: t
-				}).then(result => {
-					if (result[0] !== 1) {
-						throw new Error(`Invalid number of tickets cancelled: ${result[0]}`)
-					}
-
-					// Create a ticket log entry
-					return TicketLogModel.create({
-						ticket_id: ticket.id
-					}, { transaction: t })
-				})
-			})
-		}).then(() => {
 			// Return a 'No Content' response header indicating success
 			res.sendStatus(204)
 
 			// Broadcast on WebSocket that ticket(s) have been updated
-			broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
+			return broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
 		}).catch(err => {
 			console.error(err)
-			return res.sendStatus(400)
+			res.sendStatus(500)
 		})
 	})
 

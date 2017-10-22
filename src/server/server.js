@@ -9,7 +9,7 @@ import ExpressValidator from 'express-validator'
 import { setupAuth, hashPassword } from './auth'
 import setupRoutes from './routes'
 import db from './database/db'
-import { TicketModel, TicketLogModel, UserModel } from './database/models'
+import { TicketModel, UserModel } from './database/models'
 
 // Verify the database connection
 db.authenticate().then(() => {
@@ -63,7 +63,7 @@ db.authenticate().then(() => {
 	setupRoutes(app, wss)
 
 	// Synchronize models to create database tables
-	TicketModel.sync().then(() => TicketLogModel.sync())
+	return TicketModel.sync()
 		.then(() => UserModel.sync())
 		.then(() => hashPassword('12345'))
 		.then(hash => {
@@ -78,7 +78,7 @@ db.authenticate().then(() => {
 			})
 		}).then(() => {
 			// Finally, start the Express application
-			server.listen(port, err => {
+			return server.listen(port, err => {
 				if (err) {
 					console.error(err)
 				} else {

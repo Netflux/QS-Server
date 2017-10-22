@@ -14,7 +14,7 @@ const common = {
 			}
 		]
 	},
-	devtool: 'eval-source-map'
+	devtool: 'source-map'
 }
 
 const client = {

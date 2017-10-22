@@ -12,6 +12,10 @@ const TicketModel = db.define('Ticket', {
 		type: Sequelize.STRING,
 		allowNull: false
 	},
+	secret: {
+		type: Sequelize.STRING,
+		allowNull: false
+	},
 	time_created: {
 		type: Sequelize.INTEGER.UNSIGNED,
 		allowNull: false
@@ -22,25 +26,19 @@ const TicketModel = db.define('Ticket', {
 	duration: {
 		type: Sequelize.INTEGER.UNSIGNED
 	},
-	cancelled: {
-		type: Sequelize.BOOLEAN,
+	status: {
+		type: Sequelize.INTEGER.UNSIGNED,
 		allowNull: false
 	}
-}, { timestamps: false })
+})
 
-// Ticket Logs used to keep track of tickets that have been updated
-// When updating local databases, reduce bandwidth usage by only fetch updated tickets:
-// 1. After an update, store the ID of the last Ticket Log processed
-// 2. Fetch tickets where the Ticket Log ID is greater than the stored ID
-const TicketLogModel = db.define('TicketLog', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true,
-		autoIncrement: true
-	}
-}, { timestamps: false })
-
-TicketLogModel.belongsTo(TicketModel, { foreignKey: 'ticket_id' })
+TicketModel.attrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'status' ]
+TicketModel.status = {
+	CANCELLED: 0,
+	PENDING: 1,
+	SERVING: 2,
+	SERVED: 3
+}
 
 const UserModel = db.define('User', {
 	id: {
@@ -59,4 +57,4 @@ const UserModel = db.define('User', {
 	}
 }, { timestamps: false })
 
-export { TicketModel, TicketLogModel, UserModel }
+export { TicketModel, UserModel }

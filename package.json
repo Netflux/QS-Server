@@ -6,9 +6,9 @@
   "scripts": {
     "clean": "rimraf ./build ./static/js ./static/css",
     "lint": "eslint src",
-    "watch": "webpack --config webpack.config.dev.js --watch",
-    "build-dev": "webpack --config webpack.config.dev.js",
-    "start-dev": "node build/server-bundle.js",
+    "watch": "NODE_ENV='development' webpack --config webpack.config.dev.js --watch",
+    "build-dev": "NODE_ENV='development' webpack --config webpack.config.dev.js",
+    "start-dev": "NODE_ENV='development' node build/server-bundle.js",
     "build": "NODE_ENV='production' webpack --config webpack.config.prod.js",
     "start": "NODE_ENV='production' node build/server-bundle.js"
   },

@@ -89,7 +89,7 @@ const server = {
 		__dirname: true
 	},
 	externals: [nodeExternals()],
-	devtool: 'eval-source-map'
+	devtool: 'source-map'
 }
 
 module.exports = [
