@@ -1,14 +1,14 @@
 import { combineReducers } from 'redux'
 
 import {
-	REQUEST_TICKET, RECEIVE_CUR_TICKET, RECEIVE_TICKET_ERROR,
+	REQUEST_TICKET, RESPONSE_TICKET_ERROR, RECEIVE_TICKETS,
 	REQUEST_USER, RECEIVE_USER_SUCCESS, RECEIVE_USER_ERROR
-} from '../actions'
+} from 'client/actions'
 
-const curTicket = (state = {
-	lastFetched: false,
+const tickets = (state = {
+	lastFetched: 0,
 	isFetching: false,
-	id: -1
+	data: []
 }, action) => {
 	switch (action.type) {
 	case REQUEST_TICKET:
@@ -16,18 +16,21 @@ const curTicket = (state = {
 			...state,
 			isFetching: true
 		}
-	case RECEIVE_CUR_TICKET:
-		return {
-			...state,
-			lastFetched: Date.now(),
-			isFetching: false,
-			id: action.payload
-		}
-	case RECEIVE_TICKET_ERROR:
+	case RESPONSE_TICKET_ERROR:
 		return {
 			...state,
 			isFetching: false
 		}
+	case RECEIVE_TICKETS: {
+		const removeIds = action.payload.map(t => t.id)
+		const tickets = state.data.filter(t => !removeIds.includes(t.id))
+		return {
+			...state,
+			lastFetched: action.time,
+			isFetching: false,
+			data: [ ...tickets, ...action.payload ].sort((a, b) => a.id - b.id)
+		}
+	}
 	}
 	return state
 }
@@ -61,7 +64,7 @@ const user = (state = {
 }
 
 const rootReducer = combineReducers({
-	curTicket,
+	tickets,
 	user
 })
 

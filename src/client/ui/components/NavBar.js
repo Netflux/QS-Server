@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Link, NavLink, withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import { handleLogout } from '../../actions'
+import { handleLogout } from 'client/actions'
 import './css/NavBar.css'
 
 const mapStateToProps = state => ({

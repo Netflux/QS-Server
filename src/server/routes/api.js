@@ -1,11 +1,10 @@
 import Passport from 'passport'
 import WebSocket from 'ws'
 
-import { TicketModel } from '../database/models'
+import { TicketModel } from 'server/database/models'
+import { WS_MSG } from 'shared/constants'
 
 const setupAPI = (app, wss) => {
-	const MSG_TICKETS_CREATED = 'MSG_TICKETS_CREATED'
-	const MSG_TICKETS_UPDATED = 'MSG_TICKETS_UPDATED'
 	const broadcastTicketsUpdated = message => {
 		wss.clients.forEach(client => {
 			if (client.readyState === WebSocket.OPEN) {
@@ -122,7 +121,52 @@ const setupAPI = (app, wss) => {
 				res.json({ data: ticket.dataValues })
 
 				// Broadcast on WebSocket that ticket(s) have been updated
-				return broadcastTicketsUpdated(MSG_TICKETS_CREATED)
+				broadcastTicketsUpdated(WS_MSG.TICKETS_CREATED)
+
+				return Promise.resolve()
+			}).catch(err => {
+				console.error(err)
+				res.sendStatus(500)
+			})
+		})
+	})
+
+	app.put('/api/tickets/:id', (req, res) => {
+		req.checkParams('id', 'Invalid ID').isInt()
+		req.checkBody('key', 'Invalid key').notEmpty().isString()
+		req.checkBody('secret', 'Invalid secret').notEmpty().isString()
+		req.checkBody('status', 'Invalid status').isInt()
+
+		req.getValidationResult().then(result => {
+			if (!result.isEmpty()) {
+				return res.status(422).json({ error: result.useFirstErrorOnly().array() })
+			}
+
+			req.sanitizeParams('id').toInt()
+			req.sanitizeBody('key').escape()
+			req.sanitizeBody('secret').escape()
+			req.sanitizeBody('status').toInt()
+
+			// Update the ticket as served
+			TicketModel.update({ status: req.body.status }, {
+				where: {
+					id: req.params.id,
+					key: req.body.key,
+					secret: req.body.secret,
+					status: { $ne: TicketModel.status.CANCELLED }
+				}
+			}).then(result => {
+				if (result[0] !== 1) {
+					return res.sendStatus(422)
+				}
+
+				// Return a 'No Content' response header indicating success
+				res.sendStatus(204)
+
+				// Broadcast on WebSocket that ticket(s) have been updated
+				broadcastTicketsUpdated(WS_MSG.TICKETS_UPDATED)
+
+				return Promise.resolve()
 			}).catch(err => {
 				console.error(err)
 				res.sendStatus(500)
@@ -160,48 +204,13 @@ const setupAPI = (app, wss) => {
 				res.sendStatus(204)
 
 				// Broadcast on WebSocket that ticket(s) have been updated
-				return broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
+				broadcastTicketsUpdated(WS_MSG.TICKETS_UPDATED)
+
+				return Promise.resolve()
 			}).catch(err => {
 				console.error(err)
 				res.sendStatus(500)
 			})
-		})
-	})
-
-	app.get('/api/tickets/current', (req, res) => {
-		TicketModel.findOne({
-			attributes: TicketModel.attrs,
-			where: { status: TicketModel.status.SERVING },
-			order: [ [ 'id', 'ASC' ] ]
-		}).then(ticket => {
-			return res.json({ data: ticket })
-		}).catch(err => {
-			console.error(err)
-			res.sendStatus(500)
-		})
-	})
-
-	app.get('/api/tickets/next', (req, res) => {
-		if (!req.user) {
-			return res.sendStatus(403)
-		}
-
-		// Update the ticket as served
-		TicketModel.update({ status: TicketModel.status.SERVED }, {
-			where: { status: TicketModel.status.SERVING }
-		}).then(result => {
-			if (result[0] !== 1) {
-				return res.sendStatus(422)
-			}
-
-			// Return a 'No Content' response header indicating success
-			res.sendStatus(204)
-
-			// Broadcast on WebSocket that ticket(s) have been updated
-			return broadcastTicketsUpdated(MSG_TICKETS_UPDATED)
-		}).catch(err => {
-			console.error(err)
-			res.sendStatus(500)
 		})
 	})
 

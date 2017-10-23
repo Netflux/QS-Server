@@ -1,3 +1,15 @@
 .ticket-tools {
-	padding-top: 3rem;
+	padding-top: 2rem;
+}
+.ticket-tools .button-cancel {
+	background-color: #EEB3B3;
+}
+.ticket-tools .button-cancel:hover:not([disabled]) {
+	background-color: #DDA6A6;
+}
+.ticket-tools .button-served {
+	background-color: #B3EEB3;
+}
+.ticket-tools .button-served:hover:not([disabled]) {
+	background-color: #A6DDA6;
 }

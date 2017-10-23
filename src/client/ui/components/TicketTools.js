@@ -2,33 +2,54 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { fetchCurTicket, fetchNextTicket } from '../../actions'
+import { TICKET_STATUS } from 'shared/constants'
+import { fetchTickets, cancelTicket, serveTicket, nextTicket } from 'client/actions'
 import './css/TicketTools.css'
 
 const mapStateToProps = state => ({
-	curTicket: state.curTicket
+	tickets: state.tickets,
+	isLoggedIn: state.user.isLoggedIn
 })
 
 const mapDispatchToProps = dispatch => ({
-	fetchCurTicket: () => dispatch(fetchCurTicket()),
-	fetchNextTicket: () => dispatch(fetchNextTicket())
+	fetchTickets: () => dispatch(fetchTickets()),
+	cancelTicket: ticket => dispatch(cancelTicket(ticket)),
+	serveTicket: ticket => dispatch(serveTicket(ticket)),
+	nextTicket: () => dispatch(nextTicket())
 })
 
-const TicketTools = ({ curTicket, fetchCurTicket, fetchNextTicket }) => (
-	<div className="ticket-tools grid">
-		<div className="col"><button onClick={fetchCurTicket} disabled={curTicket.isFetching}>Refresh</button></div>
-		{
-			!(curTicket.lastFetched && curTicket.id === -1) && (
-				<div className="col"><button onClick={fetchNextTicket} disabled={curTicket.isFetching}>Next Ticket</button></div>
-			)
-		}
-	</div>
-)
+const TicketTools = ({ tickets, isLoggedIn, fetchTickets, cancelTicket, serveTicket, nextTicket }) => {
+	const curTicket = tickets.data.find(t => t.status === TICKET_STATUS.SERVING)
+	const pendingTicket = tickets.data.find(t => t.status === TICKET_STATUS.PENDING)
+	return (
+		<div className="ticket-tools grid">
+			<div className="col"><button onClick={fetchTickets} disabled={tickets.isFetching}>Refresh</button></div>
+			{
+				isLoggedIn && curTicket && (
+					<div className="col"><button className="button-cancel" onClick={() => cancelTicket(curTicket)} disabled={tickets.isFetching}>Cancel Ticket</button></div>
+				)
+			}
+			{
+				isLoggedIn && curTicket && (
+					<div className="col"><button className="button-served" onClick={() => serveTicket(curTicket)} disabled={tickets.isFetching}>Served</button></div>
+				)
+			}
+			{
+				isLoggedIn && !curTicket && pendingTicket && (
+					<div className="col"><button onClick={nextTicket} disabled={tickets.isFetching}>Next Ticket</button></div>
+				)
+			}
+		</div>
+	)
+}
 
 TicketTools.propTypes = {
-	curTicket: PropTypes.object.isRequired,
-	fetchCurTicket: PropTypes.func.isRequired,
-	fetchNextTicket: PropTypes.func.isRequired
+	tickets: PropTypes.object.isRequired,
+	isLoggedIn: PropTypes.bool.isRequired,
+	fetchTickets: PropTypes.func.isRequired,
+	cancelTicket: PropTypes.func.isRequired,
+	serveTicket: PropTypes.func.isRequired,
+	nextTicket: PropTypes.func.isRequired
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TicketTools)

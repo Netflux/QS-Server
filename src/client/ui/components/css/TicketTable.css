@@ -1,0 +1,28 @@
+.ticket-table {
+	width: 50%;
+	margin: 1rem auto 0 auto;
+}
+.ticket-table h2 {
+	margin-top: 3rem;
+	margin-bottom: 0.66rem;
+}
+.ticket-table table {
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+}
+.ticket-table tr:nth-of-type(even) {
+	background-color: #EEE;
+}
+.ticket-table th, td {
+	padding: 0.66rem;
+}
+.ticket-table td:nth-of-type(1) {
+	width: 3rem;
+}
+
+@media (max-width: 48em) {
+	.ticket-table {
+		width: 100%;
+	}
+}

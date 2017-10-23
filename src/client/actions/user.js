@@ -1,9 +1,12 @@
+import { fetchTickets } from './ticket'
+
 export const handleCheckLogin = () => dispatch => {
 	dispatch(requestUser())
 
 	return fetch('/api/login', { credentials: 'include' })
 		.then(response => {
 			if (response.ok) {
+				dispatch(fetchTickets(true, true))
 				return dispatch(receiveUserSuccess(true))
 			}
 			throw new Error(`HTTP Error ${response.status}: No previous login`)
@@ -28,6 +31,7 @@ export const handleLogin = (username, password) => dispatch => {
 	return fetch('/api/login', options)
 		.then(response => {
 			if (response.ok) {
+				dispatch(fetchTickets(true, true))
 				return dispatch(receiveUserSuccess(true))
 			}
 			throw new Error(`HTTP Error ${response.status}: Failed to login`)
@@ -42,6 +46,7 @@ export const handleLogout = () => dispatch => {
 	return fetch('/api/logout', { credentials: 'include' })
 		.then(response => {
 			if (response.ok) {
+				dispatch(fetchTickets(true, true))
 				return dispatch(receiveUserSuccess(false))
 			}
 			throw new Error(`HTTP Error ${response.status}: Failed to logout`)

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { LoginForm } from '../components'
+import { LoginForm } from 'client/ui/components'
 
 const LoginPage = () => (
 	<main>

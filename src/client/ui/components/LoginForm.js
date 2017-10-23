@@ -4,7 +4,7 @@ import { Redirect } from 'react-router'
 import { connect } from 'react-redux'
 
 import PageHeader from './PageHeader'
-import { handleLogin } from '../../actions'
+import { handleLogin } from 'client/actions'
 import './css/LoginForm.css'
 
 const mapStateToProps = state => ({

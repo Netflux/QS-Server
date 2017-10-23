@@ -1,6 +1,7 @@
 import Sequelize from 'sequelize'
 
 import db from './db'
+import { TICKET_STATUS } from 'shared/constants'
 
 const TicketModel = db.define('Ticket', {
 	id: {
@@ -33,12 +34,7 @@ const TicketModel = db.define('Ticket', {
 })
 
 TicketModel.attrs = [ 'id', 'key', 'time_created', 'time_served', 'duration', 'status' ]
-TicketModel.status = {
-	CANCELLED: 0,
-	PENDING: 1,
-	SERVING: 2,
-	SERVED: 3
-}
+TicketModel.status = TICKET_STATUS
 
 const UserModel = db.define('User', {
 	id: {

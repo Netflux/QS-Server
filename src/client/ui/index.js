@@ -4,17 +4,14 @@ import { Switch, Route } from 'react-router'
 import { withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 
+import { WS_MSG } from 'shared/constants'
 import { NavBar, Footer } from './components'
 import { HomePage, AboutPage, LoginPage, NotFoundPage } from './pages'
-import { fetchCurTicket, handleCheckLogin } from '../actions'
+import { fetchTickets, handleCheckLogin } from 'client/actions'
 import './index.css'
 
-const mapStateToProps = state => ({
-	ticketId: state.curTicket.id
-})
-
 const mapDispatchToProps = dispatch => ({
-	fetchCurTicket: () => dispatch(fetchCurTicket()),
+	fetchTickets: () => dispatch(fetchTickets(true)),
 	handleCheckLogin: () => dispatch(handleCheckLogin())
 })
 
@@ -27,12 +24,12 @@ class App extends React.Component {
 
 		this.ws = new WebSocket(`ws://${location.host}/`)
 		this.ws.addEventListener('message', ({ data }) => {
-			const shouldFetch = (data.includes('MSG_TICKETS_CREATED') && this.props.ticketId === -1) || data.includes('MSG_TICKETS_UPDATED')
+			const shouldFetch = data.includes(WS_MSG.TICKETS_CREATED) || data.includes(WS_MSG.TICKETS_UPDATED)
 			if (shouldFetch) {
-				this.props.fetchCurTicket()
+				this.props.fetchTickets()
 			}
 		})
-		this.ws.addEventListener('open', () => this.props.fetchCurTicket())
+		this.ws.addEventListener('open', () => this.props.fetchTickets())
 		this.ws.addEventListener('close', reconnectHandler)
 		this.ws.addEventListener('error', reconnectHandler)
 	}
@@ -65,9 +62,8 @@ class App extends React.Component {
 }
 
 App.propTypes = {
-	ticketId: PropTypes.number.isRequired,
-	fetchCurTicket: PropTypes.func.isRequired,
+	fetchTickets: PropTypes.func.isRequired,
 	handleCheckLogin: PropTypes.func.isRequired
 }
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App))
+export default withRouter(connect(null, mapDispatchToProps)(App))

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { PageHeader } from '../components'
+import { PageHeader } from 'client/ui/components'
 
 const AboutPage = () => (
 	<main>
