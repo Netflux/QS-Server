@@ -5,14 +5,15 @@ import { withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 
 import { WS_MSG } from 'shared/constants'
-import { NavBar, Footer } from './components'
+import { NavBar, Footer, AlertDialog } from './components'
 import { HomePage, AboutPage, LoginPage, NotFoundPage } from './pages'
-import { fetchTickets, handleCheckLogin } from 'client/actions'
+import { fetchTickets, handleCheckLogin, handleCheckSystem } from 'client/actions'
 import './index.css'
 
 const mapDispatchToProps = dispatch => ({
 	fetchTickets: () => dispatch(fetchTickets(true)),
-	handleCheckLogin: () => dispatch(handleCheckLogin())
+	handleCheckLogin: () => dispatch(handleCheckLogin()),
+	handleCheckSystem: () => dispatch(handleCheckSystem())
 })
 
 class App extends React.Component {
@@ -23,12 +24,7 @@ class App extends React.Component {
 		}
 
 		this.ws = new WebSocket(`ws://${location.host}/`)
-		this.ws.addEventListener('message', ({ data }) => {
-			const shouldFetch = data.includes(WS_MSG.TICKETS_CREATED) || data.includes(WS_MSG.TICKETS_UPDATED)
-			if (shouldFetch) {
-				this.props.fetchTickets()
-			}
-		})
+		this.ws.addEventListener('message', ({ data }) => this.props.fetchTickets())
 		this.ws.addEventListener('open', () => this.props.fetchTickets())
 		this.ws.addEventListener('close', reconnectHandler)
 		this.ws.addEventListener('error', reconnectHandler)
@@ -36,6 +32,7 @@ class App extends React.Component {
 
 	componentDidMount() {
 		this.props.handleCheckLogin()
+		this.props.handleCheckSystem()
 		this.setupWebSocket()
 	}
 
@@ -56,6 +53,8 @@ class App extends React.Component {
 				</Switch>
 
 				<Footer/>
+
+				<AlertDialog/>
 			</div>
 		)
 	}
@@ -63,7 +62,8 @@ class App extends React.Component {
 
 App.propTypes = {
 	fetchTickets: PropTypes.func.isRequired,
-	handleCheckLogin: PropTypes.func.isRequired
+	handleCheckLogin: PropTypes.func.isRequired,
+	handleCheckSystem: PropTypes.func.isRequired
 }
 
 export default withRouter(connect(null, mapDispatchToProps)(App))

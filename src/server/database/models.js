@@ -1,7 +1,8 @@
 import Sequelize from 'sequelize'
+import KeyPairModel from 'node-persist'
 
 import db from './db'
-import { TICKET_STATUS } from 'shared/constants'
+import { TICKET_STATUS, SYSTEM_STATUS, KEYS } from 'shared/constants'
 
 const TicketModel = db.define('Ticket', {
 	id: {
@@ -53,4 +54,11 @@ const UserModel = db.define('User', {
 	}
 }, { timestamps: false })
 
-export { TicketModel, UserModel }
+KeyPairModel.initSync({
+	dir: 'build/keypairs'
+})
+if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_STATUS).length === 0) {
+	KeyPairModel.setItemSync(KEYS.SYSTEM_STATUS, SYSTEM_STATUS.DISABLED)
+}
+
+export { TicketModel, UserModel, KeyPairModel }

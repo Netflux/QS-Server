@@ -30,6 +30,7 @@ main {
 .text-center	{ text-align: center; }
 .text-justify	{ text-align: justify; }
 .margin-none	{ margin: 0; }
+.clickable		{ cursor: pointer; }
 
 button {
 	width: 100%;
