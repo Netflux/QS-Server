@@ -53,7 +53,7 @@ const TicketTools = ({ tickets, system, isLoggedIn, handleUpdate, cancelTicket, 
 				isLoggedIn && !system.isFetching && (
 					<div className="col-12">
 						<button
-							className={system.isEnabled ? 'button-cancel' : 'button-served'}
+							className={system.isEnabled ? 'button-queue' : 'button-served'}
 							onClick={() => system.isEnabled ? showAlertDialog() : updateSystemStatus(SYSTEM_STATUS.ENABLED)}>
 								{system.isEnabled ? 'Close Queue' : 'Open Queue'}
 						</button>

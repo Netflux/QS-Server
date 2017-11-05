@@ -1,11 +1,17 @@
 .ticket-tools {
 	padding-top: 2rem;
 }
-.ticket-tools .button-cancel {
+.ticket-tools .button-queue {
 	background-color: #EEB3B3;
 }
-.ticket-tools .button-cancel:hover:not([disabled]) {
+.ticket-tools .button-queue:hover:not([disabled]) {
 	background-color: #DDA6A6;
+}
+.ticket-tools .button-cancel {
+	background-color: #EED1B3;
+}
+.ticket-tools .button-cancel:hover:not([disabled]) {
+	background-color: #DDC2A6;
 }
 .ticket-tools .button-served {
 	background-color: #B3EEB3;
