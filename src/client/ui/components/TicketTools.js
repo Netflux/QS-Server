@@ -55,7 +55,7 @@ const TicketTools = ({ tickets, system, isLoggedIn, handleUpdate, cancelTicket, 
 						<button
 							className={system.isEnabled ? 'button-queue' : 'button-served'}
 							onClick={() => system.isEnabled ? showAlertDialog() : updateSystemStatus(SYSTEM_STATUS.ENABLED)}>
-								{system.isEnabled ? 'Close Queue' : 'Open Queue'}
+							{system.isEnabled ? 'Close Queue' : 'Open Queue'}
 						</button>
 					</div>
 				)
@@ -66,12 +66,14 @@ const TicketTools = ({ tickets, system, isLoggedIn, handleUpdate, cancelTicket, 
 
 TicketTools.propTypes = {
 	tickets: PropTypes.object.isRequired,
+	system: PropTypes.object.isRequired,
 	isLoggedIn: PropTypes.bool.isRequired,
 	handleUpdate: PropTypes.func.isRequired,
 	cancelTicket: PropTypes.func.isRequired,
 	serveTicket: PropTypes.func.isRequired,
 	nextTicket: PropTypes.func.isRequired,
-	updateSystemStatus: PropTypes.func.isRequired
+	updateSystemStatus: PropTypes.func.isRequired,
+	showAlertDialog: PropTypes.func.isRequired
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TicketTools)

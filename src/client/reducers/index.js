@@ -112,20 +112,20 @@ const alertDialog = (state = {
 	isShowing: false
 }, action) => {
 	switch (action.type) {
-		case SHOW_ALERT_DIALOG:
-			return {
-				...state,
-				...action.payload,
-				isShowing: true
-			}
-		case HIDE_ALERT_DIALOG:
-			return {
-				title: '',
-				description: '',
-				okAction: false,
-				cancelAction: false,
-				isShowing: false
-			}
+	case SHOW_ALERT_DIALOG:
+		return {
+			...state,
+			...action.payload,
+			isShowing: true
+		}
+	case HIDE_ALERT_DIALOG:
+		return {
+			title: '',
+			description: '',
+			okAction: false,
+			cancelAction: false,
+			isShowing: false
+		}
 	}
 	return state
 }

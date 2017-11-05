@@ -4,7 +4,6 @@ import { Switch, Route } from 'react-router'
 import { withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import { WS_MSG } from 'shared/constants'
 import { NavBar, Footer, AlertDialog } from './components'
 import { HomePage, AboutPage, LoginPage, NotFoundPage } from './pages'
 import { fetchTickets, handleCheckLogin, handleCheckSystem } from 'client/actions'
@@ -24,7 +23,7 @@ class App extends React.Component {
 		}
 
 		this.ws = new WebSocket(`ws://${location.host}/`)
-		this.ws.addEventListener('message', ({ data }) => this.props.fetchTickets())
+		this.ws.addEventListener('message', () => this.props.fetchTickets())
 		this.ws.addEventListener('open', () => this.props.fetchTickets())
 		this.ws.addEventListener('close', reconnectHandler)
 		this.ws.addEventListener('error', reconnectHandler)
