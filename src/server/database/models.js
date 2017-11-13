@@ -26,7 +26,8 @@ const TicketModel = db.define('Ticket', {
 		type: Sequelize.INTEGER.UNSIGNED
 	},
 	duration: {
-		type: Sequelize.INTEGER.UNSIGNED
+		type: Sequelize.INTEGER.UNSIGNED,
+		allowNull: false
 	},
 	status: {
 		type: Sequelize.INTEGER.UNSIGNED,

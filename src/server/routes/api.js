@@ -1,5 +1,6 @@
 import Passport from 'passport'
 import WebSocket from 'ws'
+import Sequelize from 'sequelize'
 
 import { TicketModel, KeyPairModel } from 'server/database/models'
 import { WS_MSG, SYSTEM_STATUS, KEYS } from 'shared/constants'
@@ -166,6 +167,7 @@ const setupAPI = (app, wss) => {
 						key: req.body.key,
 						secret: req.body.secret,
 						time_created: Date.now(),
+						duration: 0,
 						status: TicketModel.status.PENDING
 					}
 				}).spread((ticket, created) => {
@@ -204,8 +206,12 @@ const setupAPI = (app, wss) => {
 			req.sanitizeBody('secret').escape()
 			req.sanitizeBody('status').toInt()
 
+			const columns = { status: req.body.status }
+			if (req.body.status === TicketModel.status.SERVING) { columns.time_served = Date.now() }
+			if (req.body.status === TicketModel.status.SERVED) { columns.duration = Sequelize.literal(`${Date.now()} - time_served`) }
+
 			// Update the ticket as served
-			TicketModel.update({ status: req.body.status }, {
+			TicketModel.update(columns, {
 				where: {
 					id: req.params.id,
 					key: req.body.key,
