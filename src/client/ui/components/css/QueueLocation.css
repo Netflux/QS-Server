@@ -1,0 +1,36 @@
+.queue-location {
+	padding-top: 0.33rem;
+}
+.queue-location h3 {
+	margin: 0 0 1.33rem 0;
+	font-size: 2rem;
+}
+.queue-location h3 div {
+	display: inline;
+	width: auto;
+	margin-top: 0.33rem;
+	margin-left: 0.66rem;
+}
+.queue-location button {
+	position: relative;
+	top: -4px;
+	width: auto;
+	margin-left: 0.66rem;
+	padding: 0.5rem 1rem;
+	font-size: 1rem;
+}
+.queue-location input {
+	position: relative;
+	top: -2px;
+	width: 30%;
+	min-width: 225px;
+	font-size: 1.33rem;
+}
+
+@media (max-width: 36em) {
+	.queue-location h3 div {
+		display: inline-block;
+		width: 100%;
+		margin-left: 0;
+	}
+}

@@ -58,12 +58,16 @@ const setupAPI = (app, wss) => {
 	})
 
 	app.get('/api/system', (req, res) => {
-		KeyPairModel.getItem(KEYS.SYSTEM_STATUS).then(value => {
-			if (value === SYSTEM_STATUS.DISABLED) {
-				return res.sendStatus(503)
-			}
-
-			res.sendStatus(200)
+		Promise.all([
+			KeyPairModel.getItem(KEYS.SYSTEM_STATUS),
+			KeyPairModel.getItem(KEYS.SYSTEM_LOCATION)
+		]).then(values => {
+			return res.json({
+				data: {
+					status: values[0],
+					location: values[1]
+				}
+			})
 		}).catch(err => {
 			console.error(err)
 			res.sendStatus(500)
@@ -74,8 +78,12 @@ const setupAPI = (app, wss) => {
 		if (!req.user) {
 			return res.sendStatus(403)
 		}
+		if (req.body.status === undefined && req.body.location === undefined) {
+			return res.sendStatus(422)
+		}
 
-		req.checkBody('status', 'Invalid status').isInt()
+		if (req.body.status) { req.checkBody('status', 'Invalid status').isInt() }
+		if (req.body.location) { req.checkBody('location', 'Invalid location').notEmpty().isString() }
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
@@ -83,12 +91,20 @@ const setupAPI = (app, wss) => {
 			}
 
 			req.sanitizeBody('status').toInt()
+			req.sanitizeBody('location').escape()
 
-			KeyPairModel.setItem(KEYS.SYSTEM_STATUS, req.body.status).then(() => {
-				return TicketModel.update({ status: TicketModel.status.CANCELLED }, {
+			const promises = []
+			if (req.body.status !== undefined) {
+				promises.push(KeyPairModel.setItem(KEYS.SYSTEM_STATUS, req.body.status))
+				promises.push(TicketModel.update({ status: TicketModel.status.CANCELLED }, {
 					where: { status: { $in: [ TicketModel.status.PENDING, TicketModel.status.SERVING ] } }
-				})
-			}).then(() => {
+				}))
+			}
+			if (req.body.location !== undefined) {
+				promises.push(KeyPairModel.setItem(KEYS.SYSTEM_LOCATION, req.body.location))
+			}
+
+			Promise.all(promises).then(() => {
 				// Return a 'No Content' response header indicating success
 				res.sendStatus(204)
 
@@ -98,7 +114,6 @@ const setupAPI = (app, wss) => {
 				} else {
 					broadcastTicketsUpdated(WS_MSG.SYSTEM_ENABLED)
 				}
-
 			}).catch(err => {
 				console.error(err)
 				res.sendStatus(500)

@@ -61,5 +61,8 @@ KeyPairModel.initSync({
 if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_STATUS).length === 0) {
 	KeyPairModel.setItemSync(KEYS.SYSTEM_STATUS, SYSTEM_STATUS.DISABLED)
 }
+if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_LOCATION).length === 0) {
+	KeyPairModel.setItemSync(KEYS.SYSTEM_LOCATION, '')
+}
 
 export { TicketModel, UserModel, KeyPairModel }

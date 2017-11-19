@@ -1,3 +1,5 @@
+import { SYSTEM_STATUS } from 'shared/constants'
+
 export const handleCheckSystem = () => (dispatch, getState) => {
 	if (getState().system.isFetching) {
 		return Promise.resolve()
@@ -8,17 +10,18 @@ export const handleCheckSystem = () => (dispatch, getState) => {
 	return fetch('/api/system', { credentials: 'include' })
 		.then(response => {
 			if (response.ok) {
-				return dispatch(receiveSystemStatusSuccess(true))
-			} else if (response.status === 503) {
-				return dispatch(receiveSystemStatusSuccess(false))
+				return response.json()
 			}
 			throw new Error(`HTTP Error ${response.status}: Unable to fetch system status`)
+		}).then(json => {
+			const status = json.data.status === SYSTEM_STATUS.ENABLED
+			return dispatch(receiveSystemStatusSuccess(status, json.data.location))
 		}).catch(() => {
 			dispatch(receiveSystemStatusError())
 		})
 }
 
-export const updateSystemStatus = status => (dispatch, getState) => {
+export const updateSystemStatus = (status, location) => (dispatch, getState) => {
 	if (getState().system.isFetching) {
 		return Promise.resolve()
 	}
@@ -29,13 +32,16 @@ export const updateSystemStatus = status => (dispatch, getState) => {
 		headers: { 'Content-Type': 'application/json' },
 		method: 'POST',
 		credentials: 'include',
-		body: JSON.stringify({ status })
+		body: JSON.stringify({
+			status,
+			location
+		})
 	}).then(response => {
 		if (response.ok) {
 			dispatch(receiveSystemStatusError())
 			return dispatch(handleCheckSystem())
 		}
-		throw new Error(`HTTP Error ${response.status}: Unable to fetch system status`)
+		throw new Error(`HTTP Error ${response.status}: Unable to update system status`)
 	}).catch(() => {
 		dispatch(receiveSystemStatusError())
 	})
@@ -47,9 +53,10 @@ export const requestSystemStatus = () => ({
 })
 
 export const RECEIVE_SYSTEM_STATUS_SUCCESS = 'RECEIVE_SYSTEM_STATUS_SUCCESS'
-export const receiveSystemStatusSuccess = payload => ({
+export const receiveSystemStatusSuccess = (status, location) => ({
 	type: RECEIVE_SYSTEM_STATUS_SUCCESS,
-	payload
+	status,
+	location
 })
 
 export const RECEIVE_SYSTEM_STATUS_ERROR = 'RECEIVE_SYSTEM_STATUS_ERROR'
