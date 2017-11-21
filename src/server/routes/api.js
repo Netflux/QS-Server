@@ -60,12 +60,14 @@ const setupAPI = (app, wss) => {
 	app.get('/api/system', (req, res) => {
 		Promise.all([
 			KeyPairModel.getItem(KEYS.SYSTEM_STATUS),
-			KeyPairModel.getItem(KEYS.SYSTEM_LOCATION)
+			KeyPairModel.getItem(KEYS.SYSTEM_LOCATION),
+			KeyPairModel.getItem(KEYS.SYSTEM_REMAINING)
 		]).then(values => {
 			return res.json({
 				data: {
 					status: values[0],
-					location: values[1]
+					location: values[1],
+					remaining: values[2]
 				}
 			})
 		}).catch(err => {
@@ -78,12 +80,13 @@ const setupAPI = (app, wss) => {
 		if (!req.user) {
 			return res.sendStatus(403)
 		}
-		if (req.body.status === undefined && req.body.location === undefined) {
+		if (req.body.status === undefined && req.body.location === undefined && req.body.remaining === undefined) {
 			return res.sendStatus(422)
 		}
 
 		if (req.body.status) { req.checkBody('status', 'Invalid status').isInt() }
 		if (req.body.location) { req.checkBody('location', 'Invalid location').notEmpty().isString() }
+		if (req.body.remaining) { req.checkBody('remaining', 'Invalid remaining count').isInt() }
 
 		req.getValidationResult().then(result => {
 			if (!result.isEmpty()) {
@@ -92,6 +95,7 @@ const setupAPI = (app, wss) => {
 
 			req.sanitizeBody('status').toInt()
 			req.sanitizeBody('location').escape()
+			req.sanitizeBody('remaining').toInt()
 
 			const promises = []
 			if (req.body.status !== undefined) {
@@ -102,6 +106,9 @@ const setupAPI = (app, wss) => {
 			}
 			if (req.body.location !== undefined) {
 				promises.push(KeyPairModel.setItem(KEYS.SYSTEM_LOCATION, req.body.location))
+			}
+			if (req.body.remaining !== undefined) {
+				promises.push(KeyPairModel.setItem(KEYS.SYSTEM_REMAINING, req.body.remaining))
 			}
 
 			Promise.all(promises).then(() => {
@@ -154,9 +161,15 @@ const setupAPI = (app, wss) => {
 	})
 
 	app.post('/api/tickets', (req, res) => {
-		KeyPairModel.getItem(KEYS.SYSTEM_STATUS).then(value => {
-			if (value === SYSTEM_STATUS.DISABLED) {
+		Promise.all([
+			KeyPairModel.getItem(KEYS.SYSTEM_STATUS),
+			KeyPairModel.getItem(KEYS.SYSTEM_REMAINING)
+		]).then(values => {
+			if (values[0] === SYSTEM_STATUS.DISABLED) {
 				return res.sendStatus(503)
+			}
+			if (values[1] === 0) {
+				return res.sendStatus(422)
 			}
 
 			req.checkBody('key', 'Invalid key').notEmpty().isString()
@@ -186,7 +199,12 @@ const setupAPI = (app, wss) => {
 						status: TicketModel.status.PENDING
 					}
 				}).spread((ticket, created) => {
-					if (created) { res.status(201) }
+					if (created) {
+						// Decrement remaining ticket count
+						KeyPairModel.setItemSync(KEYS.SYSTEM_REMAINING, values[1] - 1)
+
+						res.status(201)
+					}
 
 					// Return the ticket data in the response
 					res.json({ data: ticket.dataValues })
@@ -277,6 +295,9 @@ const setupAPI = (app, wss) => {
 				if (result[0] !== 1) {
 					return res.sendStatus(422)
 				}
+
+				// Increment remaining ticket count
+				KeyPairModel.setItemSync(KEYS.SYSTEM_REMAINING, KeyPairModel.getItemSync(KEYS.SYSTEM_REMAINING) + 1)
 
 				// Return a 'No Content' response header indicating success
 				res.sendStatus(204)

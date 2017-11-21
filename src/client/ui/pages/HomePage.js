@@ -1,11 +1,12 @@
 import React from 'react'
 
-import { QueueLocation, TicketDisplay, TicketTools, TicketTable } from 'client/ui/components'
+import { QueueLocation, QueueRemaining, TicketDisplay, TicketTools, TicketTable } from 'client/ui/components'
 
 const HomePage = () => (
 	<main>
 		<TicketDisplay/>
 		<QueueLocation/>
+		<QueueRemaining/>
 		<TicketTools/>
 		<TicketTable/>
 	</main>

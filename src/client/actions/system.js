@@ -15,13 +15,13 @@ export const handleCheckSystem = () => (dispatch, getState) => {
 			throw new Error(`HTTP Error ${response.status}: Unable to fetch system status`)
 		}).then(json => {
 			const status = json.data.status === SYSTEM_STATUS.ENABLED
-			return dispatch(receiveSystemStatusSuccess(status, json.data.location))
+			return dispatch(receiveSystemStatusSuccess(status, json.data.location, json.data.remaining))
 		}).catch(() => {
 			dispatch(receiveSystemStatusError())
 		})
 }
 
-export const updateSystemStatus = (status, location) => (dispatch, getState) => {
+export const updateSystemStatus = (status, location, remaining) => (dispatch, getState) => {
 	if (getState().system.isFetching) {
 		return Promise.resolve()
 	}
@@ -34,7 +34,8 @@ export const updateSystemStatus = (status, location) => (dispatch, getState) => 
 		credentials: 'include',
 		body: JSON.stringify({
 			status,
-			location
+			location,
+			remaining
 		})
 	}).then(response => {
 		if (response.ok) {
@@ -53,10 +54,11 @@ export const requestSystemStatus = () => ({
 })
 
 export const RECEIVE_SYSTEM_STATUS_SUCCESS = 'RECEIVE_SYSTEM_STATUS_SUCCESS'
-export const receiveSystemStatusSuccess = (status, location) => ({
+export const receiveSystemStatusSuccess = (status, location, remaining) => ({
 	type: RECEIVE_SYSTEM_STATUS_SUCCESS,
 	status,
-	location
+	location,
+	remaining
 })
 
 export const RECEIVE_SYSTEM_STATUS_ERROR = 'RECEIVE_SYSTEM_STATUS_ERROR'

@@ -18,6 +18,7 @@ export const SYSTEM_STATUS = {
 }
 
 export const KEYS = {
-	SYSTEM_STATUS: 'system_status',
-	SYSTEM_LOCATION: 'system_location'
+	SYSTEM_STATUS: 'SYSTEM_STATUS',
+	SYSTEM_LOCATION: 'SYSTEM_LOCATION',
+	SYSTEM_REMAINING: 'SYSTEM_REMAINING'
 }

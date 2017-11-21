@@ -64,5 +64,8 @@ if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_STATUS).length === 0) {
 if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_LOCATION).length === 0) {
 	KeyPairModel.setItemSync(KEYS.SYSTEM_LOCATION, '')
 }
+if (KeyPairModel.valuesWithKeyMatch(KEYS.SYSTEM_REMAINING).length === 0) {
+	KeyPairModel.setItemSync(KEYS.SYSTEM_REMAINING, 0)
+}
 
 export { TicketModel, UserModel, KeyPairModel }

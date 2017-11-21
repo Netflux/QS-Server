@@ -1,17 +1,17 @@
-.queue-location {
-	padding-top: 1rem;
+.queue-remaining {
+	padding-top: 0.66rem;
 }
-.queue-location h3 {
-	margin: 0;
+.queue-remaining h3 {
+	margin: 0 0 1.33rem 0;
 	font-size: 1.66rem;
 }
-.queue-location h3 div {
+.queue-remaining h3 div {
 	display: inline;
 	width: auto;
 	margin-top: 0.33rem;
 	margin-left: 0.66rem;
 }
-.queue-location button {
+.queue-remaining button {
 	position: relative;
 	top: -4px;
 	width: auto;
@@ -19,7 +19,7 @@
 	padding: 0.5rem 1rem;
 	font-size: 1rem;
 }
-.queue-location input {
+.queue-remaining input {
 	position: relative;
 	top: -2px;
 	width: 30%;
@@ -28,7 +28,7 @@
 }
 
 @media (max-width: 36em) {
-	.queue-location h3 div {
+	.queue-remaining h3 div {
 		display: inline-block;
 		width: 100%;
 		margin-left: 0;

@@ -68,7 +68,8 @@ const user = (state = {
 const system = (state = {
 	isFetching: false,
 	isEnabled: false,
-	location: ''
+	location: '',
+	remaining: 0
 }, action) => {
 	switch (action.type) {
 	case REQUEST_SYSTEM_STATUS:
@@ -81,7 +82,8 @@ const system = (state = {
 			...state,
 			isFetching: false,
 			isEnabled: action.status,
-			location: action.location
+			location: action.location,
+			remaining: action.remaining
 		}
 	case RECEIVE_SYSTEM_STATUS_ERROR:
 		return {

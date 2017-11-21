@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
 import { updateSystemStatus } from 'client/actions'
-import './css/QueueLocation.css'
+import './css/QueueRemaining.css'
 
 const mapStateToProps = state => ({
 	system: state.system,
@@ -11,10 +11,10 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
-	updateSystemStatus: location => dispatch(updateSystemStatus(undefined, location))
+	updateSystemStatus: remaining => dispatch(updateSystemStatus(undefined, undefined, remaining))
 })
 
-class QueueLocation extends React.Component {
+class QueueRemaining extends React.Component {
 	constructor(props) {
 		super(props)
 
@@ -40,19 +40,19 @@ class QueueLocation extends React.Component {
 
 	render() {
 		return (
-			<div className="queue-location text-center">
+			<div className="queue-remaining text-center">
 				{
 					this.state.editing && !this.props.system.isEnabled ? (
-						<h3>Location:
+						<h3>Remaining Tickets:
 							<div>
-								<input name="location" type="text" onChange={this.handleInputChange} value={this.state.location}/>
+								<input name="remaining" type="number" onChange={this.handleInputChange} value={this.state.remaining}/>
 								<button onClick={this.handleSave}>{this.state.input.length === 0 ? 'Cancel' : 'Save'}</button>
 							</div>
 						</h3>
 					) : (
-						<h3>Location:
+						<h3>Remaining Tickets:
 							<div>
-								{this.props.system.location || '-'}
+								{this.props.system.remaining}
 								{
 									this.props.isLoggedIn && !this.props.system.isEnabled && (
 										<button onClick={() => this.setState({ editing: true })}>Edit</button>
@@ -67,10 +67,10 @@ class QueueLocation extends React.Component {
 	}
 }
 
-QueueLocation.propTypes = {
+QueueRemaining.propTypes = {
 	system: PropTypes.object.isRequired,
 	isLoggedIn: PropTypes.bool.isRequired,
 	updateSystemStatus: PropTypes.func.isRequired
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(QueueLocation)
+export default connect(mapStateToProps, mapDispatchToProps)(QueueRemaining)

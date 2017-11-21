@@ -23,7 +23,10 @@ class App extends React.Component {
 		}
 
 		this.ws = new WebSocket(`ws://${location.host}/`)
-		this.ws.addEventListener('message', () => this.props.fetchTickets())
+		this.ws.addEventListener('message', () => {
+			this.props.fetchTickets()
+			this.props.handleCheckSystem()
+		})
 		this.ws.addEventListener('open', () => this.props.fetchTickets())
 		this.ws.addEventListener('close', reconnectHandler)
 		this.ws.addEventListener('error', reconnectHandler)
